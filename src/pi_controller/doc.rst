@@ -116,7 +116,7 @@ Controllers
 
 .. literalinclude:: ../../src/pi_controller/main.py
    :language: python
-   :lines: 260-297
+   :lines: 260-299
    :lineno-start: 260
 
 The important lines are

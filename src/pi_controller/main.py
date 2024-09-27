@@ -262,8 +262,10 @@ def main(argv):
     """Integrator states"""
     Kp = 1e-2
     """Propotional gain"""
-    Ki = 1e-2
+    Ki = 1e-4
     """Integrator gain"""
+    Zi = 1e-2
+    """Integrator damping"""
     count = [0, 0]
     """Total number of times the transitions t13 and t23 fire."""
 
@@ -283,7 +285,7 @@ def main(argv):
             err = count[index] - count[1 - index]
             """Calculate the difference between branches"""
             sleep_amount = Kp * err + ci[index]
-            ci[index] = Ki * err
+            ci[index] = (1.0 - Zi) * ci[index] + Ki * err
             """PI controller"""
             if abs(sleep_amount) > 1e4:
                 """This should never happen."""
