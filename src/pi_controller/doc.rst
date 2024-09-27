@@ -20,7 +20,7 @@ In the diagram,
   The tokens are generated at a pre-determined rate.
 * :math:`e_1` and :math:`e_2` are consumers.
 * At :math:`p_1`, the graph is branching and :math:`p_1` is redirecting the request to
-  the first empty branch found.
+  the first available branch found.
 * Transition :math:`t_{11}` fires when :math:`k_1, p_1` both have tokens. After
   it fires, the request at :math:`p_1` is transfered to the input buffer :math:`p_{12}` of
   consumer :math:`e_1` through :math:`p_{11}`.
@@ -42,7 +42,7 @@ Goal
 ----
 
 Can you design a control law that makes the number of request processed by both consumers
-the same?
+equal?
 
 System description
 ------------------
@@ -68,15 +68,15 @@ rate. However, it can be adjusted by ``LOOP_DELAY`` parameter below.
 
 .. literalinclude:: ../../src/pi_controller/main.py
    :language: python
-   :lines: 203-207
-   :lineno-start: 203
+   :lines: 205-209
+   :lineno-start: 205
 
 The producer logic is defined as below.
 
 .. literalinclude:: ../../src/pi_controller/main.py
    :language: python
-   :lines: 207-215
-   :lineno-start: 207
+   :lines: 209-217
+   :lineno-start: 209
 
 Async function ``producer`` is called in a dedicated asyncio task loop with
 the period given by ``PRODUCE_DELAY``. The produced tokens are labeled by
@@ -90,8 +90,8 @@ to a TCP server and also constantly notifies the controllers :math:`k_1` and :ma
 
 .. literalinclude:: ../../src/pi_controller/main.py
    :language: python
-   :lines: 216-258
-   :lineno-start: 216
+   :lines: 218-260
+   :lineno-start: 218
 
 .. _controllers:
 
@@ -103,8 +103,8 @@ assigned to one of the consumers. The important part is given below.
 
 .. literalinclude:: ../../src/pi_controller/main.py
    :language: python
-   :lines: 63-73
-   :lineno-start: 63
+   :lines: 65-75
+   :lineno-start: 65
 
 It imitates doing a time consuming work by sleeping. The duration of sleep
 is assumed to be a random number with an adjustable mean value.
@@ -116,8 +116,8 @@ Controllers
 
 .. literalinclude:: ../../src/pi_controller/main.py
    :language: python
-   :lines: 258-295
-   :lineno-start: 258
+   :lines: 260-297
+   :lineno-start: 260
 
 The important lines are
 
