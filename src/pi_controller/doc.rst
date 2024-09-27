@@ -66,7 +66,6 @@ and transfers to :math:`p_1` which will redirect it to the first available branc
 In the simulation, the latency on the paths are negligible compared to the production
 rate. However, it can be adjusted by ``LOOP_DELAY`` parameter below.
 
-.. TODO: Check linenos
 .. literalinclude:: ../../src/pi_controller/main.py
    :language: python
    :lines: 203-207
@@ -86,7 +85,7 @@ integer value ``L`` (namely '◆').
 Consumers
 ^^^^^^^^^
 
-The consumer functionality is more complex because it contains a communicates
+The consumer functionality is more complex because it communicates
 to a TCP server and also constantly notifies the controllers :math:`k_1` and :math:`k_2`.
 
 .. literalinclude:: ../../src/pi_controller/main.py
@@ -135,8 +134,8 @@ none
 
 When there is no control rule in work, the token labeled by '○' loops through
 :math:`p_{i1}` and :math:`k_i` without any delay. The task loop of :math:`p_1`
-receives a token from :math:`t_0` at each loop and stars checking output arcs
-for availability. It always redirects the token to the :math:`t_{11}` because
+receives a token from :math:`t_0` at each loop and checks output arcs
+for availability. It always redirects the tokens to :math:`t_{11}` because
 its always enabled when a new token arrives. At the end, all requests are
 redirected to the consumer :math:`e_1`.
 
@@ -145,7 +144,7 @@ C1
 
 This control rule helps balancing TCP servers, because it waits for a notification
 from the consumer which informs that last request to the TCP is replied. So, it
-disables a branch while waiting and lets :math:`p_1` redirect the new token to
+disables its own branch while waiting and lets :math:`p_1` redirect the new token to
 the other branch.
 
 .. _C2:
@@ -158,7 +157,7 @@ requests processed by both TCP servers nearly equal. It keeps track of the numbe
 firings of transitions :math:`t_{13}` and :math:`t_{23}` and tries to make their difference
 as minimum as possible.
 
-The sensed metric is the number of firings and the control input is the sleep function.
+The measured metric is the number of firings and the control input is the sleep function.
 It delays the branch's operation if it is going faster than the other branch.
 
 The advantage of using the number of firings of :math:`t_{i3}` as a measure instead
@@ -185,20 +184,31 @@ The simulations are run for all controller types and several token producing rat
 
 **Comments:**
 
-* At 25Hz producer rate, consumer processes the requests faster than token producing rate
+* At 25Hz producer rate, consumers process the requests faster than token producing rate
   so 1st branch is always available for redirecting new requests for all control rules.
   There is a big difference between the number of request processed by consumers.
 * As producer rate gets close to the average processing delay of consumers (100Hz), the gap
   between consumed requests goes to zero.
-* C2 is more successful to balance the number of request processed by consumers, at the expanse
+* C2 is more successful to balance the number of request processed by consumers, at the expense
   of an additional delay in the control loop as explained in Section `C2`_.
 * C1 achieves the best total number of processed requests score and can balance the consumer
   work loads.
 * When there is no control rule is present, all requests are piled up in the first consumer's
   (:math:`p_{12}`) input buffer. It produces the worst scenario among others.
 
-Build
-^^^^^
+Reproduce
+^^^^^^^^^
+
+.. code:: bash
+
+    sudo apt install python3-venv
+    python3 -m venv venv
+    source venv/bin/activate
+
+    make build
+    make build=pi_controller
+    make run=pi_controller
+    make results=pi_controller
 
 :ref:`Usage <usage>`
 ^^^^^^^^^^^^^^^^^^^^
