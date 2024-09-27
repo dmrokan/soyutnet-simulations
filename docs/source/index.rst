@@ -1,0 +1,77 @@
+SoyutNet simulations
+====================
+
+This repo is a hobby open research project which aims to demonstrate
+the capapbilities of PT net (Petri net) based formal methods to improve
+producer/consumer pipelines by applying appropriate discrete event system (DES)
+control policies in simulated real life scenarios.
+
+The project is structured in a way to make the results easily reproducable.
+
+This project's main focus is the technical documentation. The code is used to illustrate
+the ideas and reproduce the results.
+
+`Code repository 🔗 <https://github.com/dmrokan/soyutnet-simulations>`_
+
+The simulations use `SoyutNet <https://soyutnet.readthedocs.io>`_ PT net simulator as backend.
+
+Building
+--------
+
+.. code:: bash
+
+    python3 -m venv venv
+    source venv/bin/activate
+
+    make docs
+
+Simulations
+-----------
+
+PI controller
+^^^^^^^^^^^^^
+
+This simulation investigates that a proportional-integral (PI) controller
+structure can be used to balance the work load of two TCP servers which accept
+requests from a single source.
+
+**Running:**
+
+.. code:: bash
+
+    git clone https://github.com/dmrokan/soyutnet-simulations
+    sudo apt install graphviz python3-venv
+    python3 -m venv venv
+    source venv/bin/activate
+
+    make build
+    make build=pi_controller
+    make run=pi_controller
+    make results=pi_controller
+    make graph=pi_controller
+
+:doc:`Documentation </src.pi_controller>`
+
+Building
+--------
+
+.. code:: bash
+
+    git clone https://github.com/dmrokan/soyutnet-simulations
+    sudo apt install graphviz python3-venv
+    python3 -m venv venv
+    source venv/bin/activate
+
+    make docs
+
+
+`SoyutNet <https://github.com/dmrokan/soyutnet>`__
+--------------------------------------------------
+
+Modules
+-------
+
+.. toctree::
+   :maxdepth: 1
+
+   modules
