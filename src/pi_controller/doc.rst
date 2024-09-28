@@ -68,15 +68,15 @@ rate. However, it can be adjusted by ``LOOP_DELAY`` parameter below.
 
 .. literalinclude:: ../../src/pi_controller/main.py
    :language: python
-   :lines: 205-209
-   :lineno-start: 205
+   :lines: 215-219
+   :lineno-start: 215
 
 The producer logic is defined as below.
 
 .. literalinclude:: ../../src/pi_controller/main.py
    :language: python
-   :lines: 209-217
-   :lineno-start: 209
+   :lines: 221-227
+   :lineno-start: 221
 
 Async function ``producer`` is called in a dedicated asyncio task loop with
 the period given by ``PRODUCE_DELAY``. The produced tokens are labeled by
@@ -90,8 +90,8 @@ to a TCP server and also constantly notifies the controllers :math:`k_1` and :ma
 
 .. literalinclude:: ../../src/pi_controller/main.py
    :language: python
-   :lines: 218-260
-   :lineno-start: 218
+   :lines: 228-270
+   :lineno-start: 228
 
 .. _controllers:
 
@@ -114,10 +114,12 @@ the average value of time delay for one of them.
 Controllers
 -----------
 
+.. _controller_code:
+
 .. literalinclude:: ../../src/pi_controller/main.py
    :language: python
-   :lines: 260-299
-   :lineno-start: 260
+   :lines: 270-309
+   :lineno-start: 270
 
 The important lines are
 
@@ -170,8 +172,7 @@ Results
 -------
 
 It is assumed that, the processing time of servers are modeled by an exponential random variable
-with an average processing delay of 0.01 seconds (100Hz). The TCP servers are kept alive for
-nearly 3 seconds, meaning that, each simulation takes 3 seconds.
+with an average processing delay of 0.01 seconds (100Hz). Each simulation takes nearly 3 seconds.
 
 The simulations are run for all controller types and several token producing rates from 25Hz to 750Hz.
 
@@ -195,6 +196,25 @@ The simulations are run for all controller types and several token producing rat
   work loads.
 * When there is no control rule is present, all requests are piled up in the first consumer's
   (:math:`p_{12}`) input buffer. It produces the worst scenario among others.
+
+P-controller
+^^^^^^^^^^^^
+
+.. |controller_code| replace:: :literal:`Ki`
+
+In this case, the integrator gain |controller_code|_ is chosen as zero instead of the default
+value ``1e-4``, meaning that only proportional gain is active. The plot below shows the results for
+this case.
+
+.. figure:: ../../src/pi_controller/result_2.png
+   :align: center
+
+   The results when integrator is disabled.
+
+**Comments:**
+
+* It shows the effectiveness of PI-controller scheme. Because, the controller of a branch (:math:`k_i`)
+  tracks the operation of the opposite branch much closely when integrator action is active.
 
 Reproduce
 ^^^^^^^^^

@@ -9,14 +9,14 @@ DIR = os.path.dirname(os.path.realpath(__file__))
 TIME = 2.0
 MEAN = 0.01
 RNG_PARAMS = f"exponential,{MEAN}"
-LOADS = ["0,1;"]
+K_PIS = ["1e-2,1e-4", "1e-2,0"]
 CONT = ["none", "C1", "C2"]
 PRODUCE_RATE_SCALER = 25
 END = 30
 
 
 def _results(argv):
-    for i in range(1, len(LOADS) + 1):
+    for i in range(1, len(K_PIS) + 1):
         log_file = f"{DIR}/results_{i}.json"
         output_file = f"{DIR}/result_{i}.png"
         args = ["", "-i", log_file, "-o", output_file]
@@ -30,7 +30,7 @@ def _main(argv):
     argv = ["-T", TIME] + argv[1:]
 
     i = 1
-    for l in LOADS:
+    for k in K_PIS:
         log_file = f"{DIR}/results_{i}.json"
         with open(log_file, "w") as fh:
             fh.write('{ "trials": [' + os.linesep)
@@ -47,8 +47,8 @@ def _main(argv):
                     log_file,
                     "-p",
                     PRODUCE_RATE_SCALER * j,
-                    "-l",
-                    l,
+                    "-K",
+                    k,
                 ]
                 args += argv
                 print("Starting simulation with arguments:")

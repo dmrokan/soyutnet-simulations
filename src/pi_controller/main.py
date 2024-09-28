@@ -138,10 +138,15 @@ def USAGE():
         Default: exponential,0.5
       -G
         if provided, the script generates PT net graph and exits
+      -K
+        comman separated PI controller gain values
+          e.g. 1e-1,1e-2
+
+        Default: 1e-2,1e-4
 
     **Example**
 
-      python -m src.pi_controller -T 8.5 -r exponential,0.05 -p 100 -c none
+      python src/pi_controller/main.py -T 8.5 -r exponential,0.05 -p 100 -c none
     """
     print(USAGE.__doc__)
 
@@ -167,8 +172,9 @@ def main(argv):
     GENERATE_GRAPH_AND_EXIT = False
     HOST = "127.0.0.1"
     PORTS = [8888, 8889]
+    K_PI = []
 
-    opts, args = getopt.getopt(argv[1:], "r:c:T:o:l:p:GH:P:")
+    opts, args = getopt.getopt(argv[1:], "r:c:T:o:l:p:GH:P:K:")
 
     for o, a in opts:
         if o == "-r":
@@ -194,6 +200,10 @@ def main(argv):
             HOST = a
         elif o == "-P":
             PORTS = [int(val) for val in a.split(",")]
+        elif o == "-K":
+            K_PI = [float(val) for val in a.split(",")]
+            if len(K_PI) != 2:
+                raise RuntimeError(f"Option -K is invalid '{a}'")
 
     if CONTROLLER_TYPE == "none":
         CONTROLLER_ENABLED = False
@@ -260,9 +270,9 @@ def main(argv):
 
     ci = [0.0, 0.0]
     """Integrator states"""
-    Kp = 1e-2
+    Kp = 1e-2 if not K_PI else K_PI[0]
     """Propotional gain"""
-    Ki = 1e-4
+    Ki = 1e-4 if not K_PI else K_PI[1]
     """Integrator gain"""
     Zi = 1e-2
     """Integrator damping"""
@@ -289,7 +299,7 @@ def main(argv):
             """PI controller"""
             if abs(sleep_amount) > 1e4:
                 """This should never happen."""
-                print("!!!", value, "!!!")
+                print("!!!", sleep_amount, "!!!")
                 ci[index] = 0.0
             await net.sleep(sleep_amount)
             """Give a push to the other branch when it is slower."""
