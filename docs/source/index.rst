@@ -52,6 +52,30 @@ requests from a single source.
 
 :doc:`Documentation </src.pi_controller>`
 
+HTTP balancer
+^^^^^^^^^^^^^
+
+This simulation investigates that a proportional-integral (PI) controller
+structure can be used to balance the work load of two HTTP servers which accepts
+requests from a single source.
+
+**Running:**
+
+.. code:: bash
+
+    git clone https://github.com/dmrokan/soyutnet-simulations
+    sudo apt install graphviz python3-venv apache2-utils
+    python3 -m venv venv
+    source venv/bin/activate
+
+    make build
+    make build=http_balancer
+    make run=http_balancer
+    make results=http_balancer
+    make graph=http_balancer
+
+:doc:`Documentation </src.http_balancer>`
+
 Building
 --------
 

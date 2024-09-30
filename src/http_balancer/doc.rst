@@ -183,6 +183,7 @@ Reproduce
     make build=http_balancer
     make run=http_balancer
     make results=http_balancer
+    make graph=http_balancer
     make docs
 
 :ref:`Usage <usage>`

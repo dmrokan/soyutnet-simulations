@@ -17,6 +17,7 @@ the ideas and reproduce the results.
 ## Simulations
 
 * [PI controller](https://github.com/dmrokan/soyutnet-simulations/tree/main/src/pi_controller)
+* [HTTP balancer](https://github.com/dmrokan/soyutnet-simulations/tree/main/src/http_balancer)
 
 ## Running
 
