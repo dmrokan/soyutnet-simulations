@@ -8,6 +8,7 @@ Subpackages
    :maxdepth: 4
 
    src.pi_controller
+   src.http_balancer
 
 Module contents
 ---------------

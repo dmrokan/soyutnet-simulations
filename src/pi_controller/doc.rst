@@ -229,6 +229,7 @@ Reproduce
     make build=pi_controller
     make run=pi_controller
     make results=pi_controller
+    make docs
 
 :ref:`Usage <usage>`
 ^^^^^^^^^^^^^^^^^^^^

@@ -75,5 +75,3 @@ wheels/
 MANIFEST
 
 .pytest_cache/
-
-src/**/results*.json
