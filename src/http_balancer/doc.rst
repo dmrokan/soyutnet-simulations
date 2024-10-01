@@ -57,19 +57,19 @@ is the implementation of the producer and consumers.
 Producer
 ^^^^^^^^
 
-In this case, the main asyncio loop starts a `Uvicorn <https://uvicorn.org>`__ HTTP server.
+In this case, the main asyncio loop starts a `Uvicorn <https://www.uvicorn.org>`__ HTTP server.
 
 .. literalinclude:: ../../src/http_balancer/main.py
    :language: python
-   :lines: 566-568
-   :lineno-start: 566
+   :lines: 574-577
+   :lineno-start: 574
 
 A new token is generated when the HTTP server receives a request. The request data is
 binded to the token.
 
 .. literalinclude:: ../../src/http_balancer/main.py
    :language: python
-   :lines: 270-286
+   :lines: 270-289
    :lineno-start: 270
 
 Then, the token is injected to the PT net. However, only the label and ID of token
@@ -77,8 +77,8 @@ travels through the net. The binded object is registered in the :py:attr:`soyutn
 
 .. literalinclude:: ../../src/http_balancer/main.py
    :language: python
-   :lines: 296-300
-   :lineno-start: 296
+   :lines: 299-304
+   :lineno-start: 299
 
 Consumers
 ^^^^^^^^^
@@ -89,15 +89,15 @@ given below.
 
 .. literalinclude:: ../../src/http_balancer/main.py
    :language: python
-   :lines: 379-395
-   :lineno-start: 379
+   :lines: 387-403
+   :lineno-start: 387
 
 Then consumers redirect the HTTP request defined by the token to the actual HTTP servers
 running in children processes.
 
 .. literalinclude:: ../../src/http_balancer/main.py
    :language: python
-   :lines: 304-356
+   :lines: 309-364
    :lineno-start: 304
 
 Finally, the HTTP response is sent to original source by ``await uvicorn_send(...)`` lines.
@@ -146,25 +146,38 @@ which sends 1000 POST requests with 1024 byte request body size and varying numb
 For example 5th line show that, 4% of requests replied in less than 6.65 milliseconds.
 
 In summary, the same simulation run for three different controllers and several different
-number of concurrent requesters and CSV files are obtained.
+number of concurrent requests and CSV files are obtained.
 
-The figure below plots CSV files for one of the concurrency levels.
+The figure below plots CSV files for one of the concurrency levels. The x axis shows the
+data in the second column of the CSV format given above. The y axis shows the first
+column divided by 100.
 
 .. figure:: ../../src/http_balancer/result_1.png
    :align: center
 
 The plot resembles a cumulative normal distrbution. When the numerical derivate of
-y axis data is taken with respect to x axis data, obtained the plot below.
+y axis data is taken with respect to x axis data, the plots below is obtained for
+different number of concurrent requests.
 
 .. figure:: ../../src/http_balancer/result_2.png
    :align: center
 
-   X axis is time and y axis is time distrbution for different number of concurrent
-   requesters (given by the integer value on the left of plots).
+   The x axis is time and the y axis is time distrbution for different number of concurrent
+   requests. The integer values on the left of plots show the number of concurrent requests.
+   As the number of concurrent requests increases, the average serving time increases.
+
+.. figure:: ../../src/http_balancer/result_0.png
+   :align: center
+
+   The difference between consumed requests of two HTTP servers for different control schemes.
+   The x axis is the number of concurrent requests and the y axis shows the difference between
+   the number of requests consumed by two HTTP servers and the total number of requests consumed.
 
 Comments
 ^^^^^^^^
 
+* Last plot is very similar to the results of :ref:`PI Controller <src.pi_controller:results>`
+    * The number of consumed requests are equal for 'C2'.
 * Plots resemble a normal distrbution with varying mean and standard deviations.
 * Mean value of the serving time is smallest for controller type 'C1'.
 * Mean is larger but deviation from mean is smaller for 'C2'.

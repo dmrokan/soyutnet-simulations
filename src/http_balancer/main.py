@@ -220,8 +220,9 @@ def main(argv):
     PROXY_PORT = 5000
     K_PI = []
     AB_PID = None
+    CONCURRENT_REQUESTS = None
 
-    opts, args = getopt.getopt(argv[1:], "r:c:T:o:l:p:GH:P:K:X:A:")
+    opts, args = getopt.getopt(argv[1:], "r:c:T:o:l:p:GH:P:K:X:A:C:")
 
     for o, a in opts:
         if o == "-r":
@@ -254,6 +255,8 @@ def main(argv):
             PROXY_PORT = int(PROXY_PORT)
         elif o == "-A":
             AB_PID = int(a)
+        elif o == "-C":
+            CONCURRENT_REQUESTS = int(a)
 
     if CONTROLLER_TYPE == "none":
         CONTROLLER_ENABLED = False
@@ -298,6 +301,8 @@ def main(argv):
         token = await req_queue.get()
         return [token]
 
+    """Inject token"""
+
     sensors = [asyncio.Queue() for i in range(PROC_COUNT)]
     consumer_stats = {}
 
@@ -318,7 +323,7 @@ def main(argv):
             reader, writer = await asyncio.open_connection(HOST, PORTS[index])
             writer.write(http_data)
             await writer.drain()
-            """Redirect all to the actual HTTP server"""
+            """Redirect header to the actual HTTP server"""
 
             more_body = True
             while more_body:
@@ -327,6 +332,7 @@ def main(argv):
                 writer.write(body)
                 await writer.drain()
                 more_body = message.get("more_body", False)
+            """Redirect body to the actual HTTP server"""
 
             header = await reader.readuntil(b"\r\n" * 2)
             to_find = b"\r\ncontent-length: "
@@ -336,6 +342,9 @@ def main(argv):
             content_length = int(header[:str_end])
             data = await reader.read(content_length)
             """Read response from the actual HTTP server."""
+            writer.close()
+            await writer.wait_closed()
+            """Close connection to the actual HTTP server"""
             await uvicorn_send(
                 {
                     "type": "http.response.start",
@@ -352,8 +361,7 @@ def main(argv):
                     "body": data,
                 }
             )
-            writer.close()
-            await writer.wait_closed()
+            """Redirect response to the requester"""
 
         nonlocal consumer_stats
         start_time = 0
@@ -586,6 +594,7 @@ def main(argv):
                     "rng": RNG_PARAMS,
                     "control": CONTROLLER_ENABLED,
                     "controller_type": CONTROLLER_TYPE,
+                    "produce_rate": CONCURRENT_REQUESTS,
                 },
                 "stats": consumer_stats,
             }

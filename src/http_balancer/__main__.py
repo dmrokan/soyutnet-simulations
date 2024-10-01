@@ -11,6 +11,7 @@ import math
 
 from .main import main, USAGE
 from .results import main as show_results
+from ..pi_controller import results as pi_controller_results
 
 DIR = os.path.dirname(os.path.realpath(__file__))
 MEAN_VALS = [0.01]
@@ -24,6 +25,10 @@ def _results(argv):
     output_file = f"{DIR}/result.png"
     args = ["", "-o", output_file]
     show_results(args + argv[1:])
+
+    pi_controller_results.main(
+        ["", "-i", f"{DIR}/results_1.json", "-o", f"{DIR}/result_0.png"]
+    )
 
     return 0
 
@@ -76,6 +81,8 @@ def _main(argv):
                         TOTAL_PRODUCED * 4 * mean,
                         "-A",
                         str(proc.pid),
+                        "-C",
+                        ac,
                     ]
                     args += argv[1:]
                     print("Starting simulation with arguments:")

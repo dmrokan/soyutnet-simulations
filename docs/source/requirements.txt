@@ -1,1 +1,3 @@
 sphinx==8.0.2
+soyutnet
+matplotlib==3.9.2
