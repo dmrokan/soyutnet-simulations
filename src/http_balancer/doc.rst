@@ -61,24 +61,24 @@ In this case, the main asyncio loop starts a `Uvicorn <https://www.uvicorn.org>`
 
 .. literalinclude:: ../../src/http_balancer/main.py
    :language: python
-   :lines: 574-577
-   :lineno-start: 574
+   :lines: 602-605
+   :lineno-start: 602
 
 A new token is generated when the HTTP server receives a request. The request data is
 binded to the token.
 
 .. literalinclude:: ../../src/http_balancer/main.py
    :language: python
-   :lines: 270-289
-   :lineno-start: 270
+   :lines: 273-292
+   :lineno-start: 273
 
 Then, the token is injected to the PT net. However, only the label and ID of token
 travels through the net. The binded object is registered in the :py:attr:`soyutnet.SoyutNet.TokenRegistry`.
 
 .. literalinclude:: ../../src/http_balancer/main.py
    :language: python
-   :lines: 299-304
-   :lineno-start: 299
+   :lines: 302-308
+   :lineno-start: 302
 
 Consumers
 ^^^^^^^^^
@@ -89,7 +89,7 @@ given below.
 
 .. literalinclude:: ../../src/http_balancer/main.py
    :language: python
-   :lines: 387-403
+   :lines: 387-411
    :lineno-start: 387
 
 Then consumers redirect the HTTP request defined by the token to the actual HTTP servers
@@ -97,8 +97,8 @@ running in children processes.
 
 .. literalinclude:: ../../src/http_balancer/main.py
    :language: python
-   :lines: 309-364
-   :lineno-start: 304
+   :lines: 312-368
+   :lineno-start: 312
 
 Finally, the HTTP response is sent to original source by ``await uvicorn_send(...)`` lines.
 
@@ -119,7 +119,23 @@ Controllers
 -----------
 
 This simulations uses the same controller schemes in :doc:`PI Controller </src.pi_controller>` simulation.
+Additionally, a new control scheme is implemented which is labeled by 'C3'.
 
+C3
+^^^
+
+The controller scheme :ref:`C2 <C2>` aims to make number of requests processed by two consumer equal
+by applying a PI control rule to the difference between the number of requests processed.
+It purposedly delays a branch if it is processing faster than the other.
+
+'C3' considers the time consumed while processing requests instead of the number of requests.
+It tries to minimize the processing time for both consumers and also the difference between their
+total processing times.
+
+.. literalinclude:: ../../src/http_balancer/main.py
+   :language: python
+   :lines: 416-475
+   :lineno-start: 416
 
 Results
 -------
@@ -176,12 +192,20 @@ different number of concurrent requests.
 Comments
 ^^^^^^^^
 
-* Last plot is very similar to the results of :ref:`PI Controller <src.pi_controller:results>`
-    * The number of consumed requests are equal for 'C2'.
 * Plots resemble a normal distrbution with varying mean and standard deviations.
-* Mean value of the serving time is smallest for controller type 'C1'.
+* Mean value of the serving time is smallest for controller type 'C3' and 'C1'.
 * Mean is larger but deviation from mean is smaller for 'C2'.
-* Controller 'C2' performs better if "deterministic" service time is required.
+* Controller 'C3' has a smaller mean serving time than 'C1' for larger number of requesters.
+  Its response can be fine tuned by adjusting the contributions of error terms below
+
+.. literalinclude:: ../../src/http_balancer/main.py
+   :language: python
+   :lines: 459-462
+   :lineno-start: 459
+
+* Controller 'C2' performs better if closer to "deterministic" service time is required.
+* The second plot is very similar to the results of :ref:`PI Controller <src.pi_controller:results>`
+    * The number of consumed requests are equal for 'C2'.
 
 Reproduce
 ^^^^^^^^^
@@ -199,5 +223,5 @@ Reproduce
     make graph=http_balancer
     make docs
 
-:ref:`Usage <usage>`
-^^^^^^^^^^^^^^^^^^^^
+:ref:`Usage <usage_http_balancer>`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

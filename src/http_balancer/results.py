@@ -17,15 +17,15 @@ DIR = os.path.dirname(os.path.realpath(__file__))
 
 
 def load_results():
-    filenames = glob.glob(DIR + "/result_*.csv")
+    filenames = sorted(glob.glob(DIR + "/result_*.csv"))
 
     results = OrderedDict()
 
     for fn in filenames:
         p = Path(fn)
         parts = p.name.split("_")
-        controller_type = parts[2]
-        ab_concurrency = int(parts[3])
+        controller_type = parts[1]
+        ab_concurrency = int(parts[2])
         if (ab_concurrency // 8) % 4 != 0:
             continue
 

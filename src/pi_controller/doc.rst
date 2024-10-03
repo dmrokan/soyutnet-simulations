@@ -231,5 +231,5 @@ Reproduce
     make results=pi_controller
     make docs
 
-:ref:`Usage <usage>`
-^^^^^^^^^^^^^^^^^^^^
+:ref:`Usage <usage_pi_controller>`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -20,6 +20,8 @@ else ifneq (,$(strip $(graph)))
 	$(PYTHON) -m "src.$(graph)" graph $(ARGS)
 else ifneq (,$(strip $(build)))
 	pip install -r "src/$(build)/requirements.txt"
+else ifneq (,$(strip $(clean)))
+	$(PYTHON) -m "src.$(clean)" clean $(ARGS)
 endif
 
 .SECONDEXPANSION:

@@ -95,7 +95,7 @@ def server_main(args, cond):
 
 def USAGE():
     """
-    .. _usage:
+    .. _usage_pi_controller:
 
     **Arguments:**
 

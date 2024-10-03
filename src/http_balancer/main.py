@@ -138,7 +138,7 @@ def server_main(args, cond):
 
 def USAGE():
     """
-    .. _usage:
+    .. _usage_http_balancer:
 
     **Arguments:**
 
@@ -146,7 +146,7 @@ def USAGE():
         total simulation time in seconds (:math:`T`)
 
         Default: 10
-      -c <none|C1|C2>
+      -c <none|C1|C2|C3>
         :ref:`controller <controllers>` type
 
         Default: C1
@@ -189,9 +189,11 @@ def USAGE():
 
       -A ab command's PID
 
+      -C number of concurrent requests expected
+
     **Example**
 
-      python src/pi_controller/main.py -T 8.5 -r exponential,0.05 -p 100 -c none
+      python src/http_balancer/main.py -T 8.5 -r exponential,0.05 -p 100 -c none
     """
     print(USAGE.__doc__)
 
@@ -222,7 +224,7 @@ def main(argv):
     AB_PID = None
     CONCURRENT_REQUESTS = None
 
-    opts, args = getopt.getopt(argv[1:], "r:c:T:o:l:p:GH:P:K:X:A:C:")
+    opts, args = getopt.getopt(argv[1:], "r:c:T:o:l:p:GH:P:K:X:A:C:L:")
 
     for o, a in opts:
         if o == "-r":
@@ -239,7 +241,8 @@ def main(argv):
         elif o == "-L":
             load_vs_time = a.split(";")
             for l in load_vs_time:
-                LOAD.append(tuple([float(val) for val in l.split(",")]))
+                if l:
+                    LOAD.append(tuple([float(val) for val in l.split(",")]))
         elif o == "-G":
             GENERATE_GRAPH_AND_EXIT = True
         elif o == "-H":
@@ -363,8 +366,13 @@ def main(argv):
             )
             """Redirect response to the requester"""
 
+        t0 = time.time()
+
+        def dt():
+            return time.time() - t0
+
         nonlocal consumer_stats
-        start_time = 0
+        t0 = time.time()
         ident = place.ident()
         index = int(place._name[1:]) - 1
         """Get branch index (0 or 1)"""
@@ -373,7 +381,7 @@ def main(argv):
             """Initialize stats at first call of the producer."""
             consumer_stats[ident] = {"started_at": time.time(), "count": 0}
             """Store initial time and number of requests processed to calculate requests per second."""
-            sensor.put_nowait(1)
+            sensor.put_nowait((True, dt()))
             """Initial push to the controllers, otherwise they will stuck at waiting the sensor."""
 
         label = L
@@ -381,7 +389,7 @@ def main(argv):
         T = time.time()
         if not token:
             consumer_stats[ident]["last_at"] = time.time()
-            sensor.put_nowait(0)
+            sensor.put_nowait((False, dt()))
             """If there is no new token in the buffer, inform the controller."""
             return
 
@@ -389,7 +397,7 @@ def main(argv):
         """Get actual SoyutNet.Token object from SoyutNet.TokenRegistry"""
         if actual_token is None:
             consumer_stats[ident]["last_at"] = time.time()
-            sensor.put_nowait(0)
+            sensor.put_nowait((False, dt()))
             """If there is no actual token in the register, inform the controller."""
             return
 
@@ -401,7 +409,7 @@ def main(argv):
             cond.notify_all()
         """Inform uvicorn_app that request is replied"""
 
-        sensor.put_nowait(1)
+        sensor.put_nowait((True, dt()))
         """Inform the controller."""
         consumer_stats[ident]["count"] += 1
         consumer_stats[ident]["last_at"] = time.time()
@@ -416,6 +424,8 @@ def main(argv):
     """Integrator damping"""
     count = [0, 0]
     """Total number of times the transitions t13 and t23 fire."""
+    total_delay = [0.0, 0.0]
+    """Total amount of time spent by consumers for completing HTTP requests."""
 
     async def controller(place):
         nonlocal ci
@@ -425,7 +435,7 @@ def main(argv):
         index = int(place._name[1:]) - 1
         """Get branch index."""
         sensor = sensors[index]
-        value = await sensor.get()
+        value: tuple[bool, float] = await sensor.get()
         """Receive a notification from the consumer."""
         if CONTROLLER_TYPE == "C2":
             """This happens when controller is chosen 'C2'"""
@@ -442,8 +452,26 @@ def main(argv):
             await net.sleep(sleep_amount)
             """Give a push to the other branch when it is slower."""
             return True
+        elif CONTROLLER_TYPE == "C3":
+            """This happens when controller is chosen 'C3'"""
+            count[index] += 1
+            total_delay[index] += value[1]
+            err = total_delay[index] - total_delay[1 - index]
+            """Calculate the difference between branches"""
+            err += 0.0 - total_delay[index]
+            """Try to minimize the total time consumed."""
+            sleep_amount = 1e2 * Kp * err + ci[index]
+            ci[index] = (1.0 - Zi) * ci[index] + 1e2 * Ki * err
+            """PI controller"""
+            if abs(sleep_amount) > 1e4:
+                """This should never happen."""
+                print("!!!", sleep_amount, "!!!")
+                ci[index] = 0.0
+            await net.sleep(sleep_amount)
+            """Give a push to the other branch when it is slower."""
+            return True
 
-        return value > 0  # This is the case when controller is 'C1'.
+        return value[0]  # This is the case when controller is 'C1'.
 
     p0 = net.SpecialPlace("p0", producer=producer)
     t0 = net.Transition("t0")
@@ -523,8 +551,8 @@ def main(argv):
 
     loads = [[], []]
     for l in LOAD:
-        loads[1].append((l[0], l[1]))
-    """Assign a larger load to consumer 2"""
+        loads[0].append((l[0], l[1]))
+    """Assign a larger load to consumer 1"""
 
     procs = set()
     init_conditions = set()

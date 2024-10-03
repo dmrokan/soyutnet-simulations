@@ -4,6 +4,7 @@ import os
 import sys
 from .main import main, USAGE
 from .results import main as show_results
+from ..common.clean import clean
 
 DIR = os.path.dirname(os.path.realpath(__file__))
 TIME = 2.0
@@ -79,5 +80,7 @@ match a1:
         sys.exit(_main(sys.argv[1:]))
     case "graph":
         sys.exit(main(["", "-o", DIR + "/graph.gv", "-G"]))
+    case "clean":
+        sys.exit(clean(DIR))
     case _:
         sys.exit(_main(["main"] + sys.argv[1:]))

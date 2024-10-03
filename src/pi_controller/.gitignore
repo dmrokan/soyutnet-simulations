@@ -1,1 +1,14 @@
-results*.json
+*
+
+!.gitignore
+!__init__.py
+!__main__.py
+!clean.py
+!doc.rst
+!graph.gv
+!graph.png
+!main.py
+!requirements.txt
+!result_1.png
+!result_2.png
+!results.py
