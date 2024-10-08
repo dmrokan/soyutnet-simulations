@@ -65,7 +65,7 @@ def fit_gaussian(x, pdf):
         f = fx(a, mu, c, x)
         Y = f - y
         dmu = step * np.sum(Y * f * (c * (x - mu)))
-        dc = step * np.sum(Y * (f / c - f * (c * (x - mu))))
+        dc = step * np.sum(Y * f / c) - dmu
         mu -= dmu
         c -= dc
         dtotal = dmu * dmu + dc * dc
