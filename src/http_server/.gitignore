@@ -1,0 +1,17 @@
+*
+
+!.gitignore
+!__init__.py
+!__main__.py
+!doc.rst
+!graph.gv
+!graph.png
+!main.py
+!requirements.txt
+!result_0.png
+!result_1.png
+!result_2.png
+!results.py
+!start_ab.sh
+!test_uvicorn.sh
+!uvicorn_main.py

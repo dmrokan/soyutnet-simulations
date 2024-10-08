@@ -1,0 +1,25 @@
+digraph Net {
+	subgraph cluster_0 {
+		pro0_0 [shape="circle",fontsize="20",style="filled",color="#000000",fillcolor="#777777",label="",xlabel="pro0",height="1",width="1",penwidth=3];
+		t0_0_0 [shape="box",fontsize="20",style="filled",color="#cccccc",fillcolor="#000000",label="",xlabel="t0_0",height="0.25",width="1.25",penwidth=3];
+		con0_0_0 [shape="circle",fontsize="20",style="filled",color="#000000",fillcolor="#777777",label="",xlabel="con0_0",height="1",width="1",penwidth=3];
+		pro1_0 [shape="circle",fontsize="20",style="filled",color="#000000",fillcolor="#777777",label="",xlabel="pro1",height="1",width="1",penwidth=3];
+		t1_0_0 [shape="box",fontsize="20",style="filled",color="#cccccc",fillcolor="#000000",label="",xlabel="t1_0",height="0.25",width="1.25",penwidth=3];
+		con1_0_0 [shape="circle",fontsize="20",style="filled",color="#000000",fillcolor="#777777",label="",xlabel="con1_0",height="1",width="1",penwidth=3];
+		pro2_0 [shape="circle",fontsize="20",style="filled",color="#000000",fillcolor="#777777",label="",xlabel="pro2",height="1",width="1",penwidth=3];
+		t2_0_0 [shape="box",fontsize="20",style="filled",color="#cccccc",fillcolor="#000000",label="",xlabel="t2_0",height="0.25",width="1.25",penwidth=3];
+		con2_0_0 [shape="circle",fontsize="20",style="filled",color="#000000",fillcolor="#777777",label="",xlabel="con2_0",height="1",width="1",penwidth=3];
+		pro3_0 [shape="circle",fontsize="20",style="filled",color="#000000",fillcolor="#777777",label="",xlabel="pro3",height="1",width="1",penwidth=3];
+		t3_0_0 [shape="box",fontsize="20",style="filled",color="#cccccc",fillcolor="#000000",label="",xlabel="t3_0",height="0.25",width="1.25",penwidth=3];
+		con3_0_0 [shape="circle",fontsize="20",style="filled",color="#000000",fillcolor="#777777",label="",xlabel="con3_0",height="1",width="1",penwidth=3];
+		pro0_0 -> t0_0_0 [fontsize="20",label="{1}",minlen="2",penwidth="3"];
+		t0_0_0 -> con0_0_0 [fontsize="20",label="{1}",minlen="2",penwidth="3"];
+		pro1_0 -> t1_0_0 [fontsize="20",label="{2}",minlen="2",penwidth="3"];
+		t1_0_0 -> con1_0_0 [fontsize="20",label="{2}",minlen="2",penwidth="3"];
+		pro2_0 -> t2_0_0 [fontsize="20",label="{3}",minlen="2",penwidth="3"];
+		t2_0_0 -> con2_0_0 [fontsize="20",label="{3}",minlen="2",penwidth="3"];
+		pro3_0 -> t3_0_0 [fontsize="20",label="{4}",minlen="2",penwidth="3"];
+		t3_0_0 -> con3_0_0 [fontsize="20",label="{4}",minlen="2",penwidth="3"];
+	}
+	clusterrank=none;
+}

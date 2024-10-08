@@ -9,6 +9,7 @@ Subpackages
 
    src.pi_controller
    src.http_balancer
+   src.http_server
 
 Module contents
 ---------------

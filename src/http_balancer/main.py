@@ -120,7 +120,11 @@ def server_main(args, cond):
         nonlocal uvicorn_server
         asyncio.create_task(canceller())
         config = uvicorn.Config(
-            uvicorn_app, host=args["HOST"], port=args["PORT"], log_level="critical"
+            uvicorn_app,
+            host=args["HOST"],
+            port=args["PORT"],
+            log_level="critical",
+            http="h11",
         )
         uvicorn_server = uvicorn.Server(config)
         cond.release()
@@ -295,7 +299,11 @@ def main(argv):
     async def uvicorn_main():
         nonlocal uvicorn_server
         config = uvicorn.Config(
-            uvicorn_app, host=PROXY_HOST, port=PROXY_PORT, log_level="critical"
+            uvicorn_app,
+            host=PROXY_HOST,
+            port=PROXY_PORT,
+            log_level="critical",
+            http="h11",
         )
         uvicorn_server = uvicorn.Server(config)
         await uvicorn_server.serve()
