@@ -79,11 +79,10 @@ requests from a single source.
 HTTP server
 ^^^^^^^^^^^
 
-.. TODO: Write summary
-
-This simulation investigates that a proportional-integral (PI) controller
-structure can be used to balance the work load of two HTTP servers which accepts
-requests from a single source.
+This simulation investigates how a SoyutNet based load distribution
+performs compared to a plain asyncio socket server implemented by
+`Uvicorn <https://www.uvicorn.org>`__ for different number of concurrent
+requesters.
 
 **Running:**
 
