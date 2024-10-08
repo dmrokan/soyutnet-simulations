@@ -30,7 +30,7 @@ $(GRAPHS): src/%/graph.gv: $$(wildcard src/%/*.py)
 
 $(SIMULATIONS): ;
 
-$(GRAPHS_PIX): $(GRAPHS)
+$(GRAPHS_PIX): src/%/graph.png: src/%/graph.gv
 	dot -Tpng $? > $@
 
 graphs: $(GRAPHS_PIX)
