@@ -46,8 +46,9 @@ In this case, the main asyncio loop starts a `Uvicorn <https://www.uvicorn.org>`
 
 .. literalinclude:: ../../src/http_server/main.py
    :language: python
-   :lines: 199-225
-   :lineno-start: 199
+   :start-after: loop-start-defs-start
+   :end-before: loop-start-defs-end
+   :lineno-match:
 
 The ``canceller`` task waits for benchmarking tool to be completed by checking its process status
 using ``psutil`` library. Then, it ends the simulation.
@@ -57,8 +58,9 @@ binded to the token.
 
 .. literalinclude:: ../../src/http_server/main.py
    :language: python
-   :lines: 103-138
-   :lineno-start: 103
+   :start-after: producer-defs-start
+   :end-before: producer-defs-end
+   :lineno-match:
 
 Then, the token is injected to the PT net. However, only the label and ID of token
 travels through the net. The binded object is registered in the :py:attr:`soyutnet.SoyutNet.TokenRegistry`.
@@ -72,8 +74,9 @@ given below.
 
 .. literalinclude:: ../../src/http_server/main.py
    :language: python
-   :lines: 140-175
-   :lineno-start: 140
+   :start-after: consumer-defs-start
+   :end-before: consumer-defs-end
+   :lineno-match:
 
 The Uvicorn application's implementation is in
 `<https://github.com/dmrokan/soyutnet-simulations/blob/main/src/http_server/uvicorn_main.py>`__
@@ -161,6 +164,7 @@ Reproduce
 
     make build
     make build=http_server
+    make clean=http_server
     make run=http_server
     make results=http_server
     make graph=http_server

@@ -63,6 +63,8 @@ def server_main(args, cond):
         for task in asyncio.all_tasks():
             task.cancel()
 
+    # [[tcp-server-defs-start]]
+
     async def handle_echo(reader, writer):
         data = await reader.read(MESSAGE_SIZE)
         delay_amount = rand()
@@ -72,6 +74,8 @@ def server_main(args, cond):
         await writer.drain()
         writer.close()
         await writer.wait_closed()
+
+    # [[tcp-server-defs-end]]
 
     async def main():
         server = await asyncio.start_server(handle_echo, args["HOST"], args["PORT"])
@@ -213,9 +217,15 @@ def main(argv):
     SERVER_RUNTIME = STOP_AFTER + 1
     """Server should run longer than clients."""
 
+    # [[loop-delay-defs-start]]
+
     net = SoyutNet()
     net.SLOW_MOTION = True
     net.LOOP_DELAY = 0
+
+    # [[loop-delay-defs-end]]
+
+    # [[producer-defs-start]]
 
     token_id = 0
 
@@ -224,6 +234,10 @@ def main(argv):
         await net.sleep(PRODUCE_DELAY)
         token_id += 1
         return [(L, token_id)]
+
+    # [[producer-defs-end]]
+
+    # [[consumer-defs-start]]
 
     sensors = [asyncio.Queue() for i in range(PROC_COUNT)]
     consumer_stats = {}
@@ -268,6 +282,10 @@ def main(argv):
         consumer_stats[ident]["count"] += 1
         consumer_stats[ident]["last_at"] = time.time()
 
+    # [[consumer-defs-end]]
+
+    # [[controller-defs-start]]
+
     ci = [0.0, 0.0]
     """Integrator states"""
     Kp = 1e-2 if not K_PI else K_PI[0]
@@ -306,6 +324,8 @@ def main(argv):
             return True
 
         return value > 0  # This is the case when controller is 'C1'.
+
+    # [[controller-defs-end]]
 
     p0 = net.SpecialPlace("p0", producer=producer)
     t0 = net.Transition("t0")

@@ -58,6 +58,8 @@ def server_main(args, cond):
         adjust_load()
         return _rand(*(RNG_PARAMS[1:]))
 
+    # [[http-server-defs-start]]
+
     async def read_body(receive):
         """
         Read and return the entire body from an incoming ASGI message.
@@ -96,6 +98,8 @@ def server_main(args, cond):
                 "body": body,
             }
         )
+
+    # [[http-server-defs-end]]
 
     uvicorn_server = None
 
@@ -275,6 +279,8 @@ def main(argv):
     net.SLOW_MOTION = True
     net.LOOP_DELAY = 0
 
+    # [[token-gen-defs-start]]
+
     treg = net.TokenRegistry()
     req_queue = asyncio.Queue()
 
@@ -294,6 +300,8 @@ def main(argv):
             await cond.wait()
         """Wait until endpoint fullfills HTTP request"""
 
+    # [[token-gen-defs-end]]
+
     uvicorn_server = None
 
     async def uvicorn_main():
@@ -308,11 +316,15 @@ def main(argv):
         uvicorn_server = uvicorn.Server(config)
         await uvicorn_server.serve()
 
+    # [[producer-defs-start]]
+
     async def producer(place):
         token = await req_queue.get()
         return [token]
 
     """Inject token"""
+
+    # [[producer-defs-end]]
 
     sensors = [asyncio.Queue() for i in range(PROC_COUNT)]
     consumer_stats = {}
@@ -374,6 +386,8 @@ def main(argv):
             )
             """Redirect response to the requester"""
 
+        # [[actual-token-defs-start]]
+
         t0 = time.time()
 
         def dt():
@@ -409,6 +423,10 @@ def main(argv):
             """If there is no actual token in the register, inform the controller."""
             return
 
+        # [[actual-token-defs-end]]
+
+        # [[token-processing-defs-start]]
+
         uvicorn_scope, uvicorn_receive, uvicorn_send, cond = actual_token.get_binding()
         """Get object binded to the actual token"""
         await http_proxy(uvicorn_scope, uvicorn_receive, uvicorn_send)
@@ -417,10 +435,14 @@ def main(argv):
             cond.notify_all()
         """Inform uvicorn_app that request is replied"""
 
+        # [[token-processing-defs-end]]
+
         sensor.put_nowait((True, dt()))
         """Inform the controller."""
         consumer_stats[ident]["count"] += 1
         consumer_stats[ident]["last_at"] = time.time()
+
+    # [[controller-defs-start]]
 
     ci = [0.0, 0.0]
     """Integrator states"""
@@ -464,10 +486,16 @@ def main(argv):
             """This happens when controller is chosen 'C3'"""
             count[index] += 1
             total_delay[index] += value[1]
+
+            # [[err-defs-start]]
+
             err = total_delay[index] - total_delay[1 - index]
             """Calculate the difference between branches"""
             err += 0.0 - total_delay[index]
             """Try to minimize the total time consumed."""
+
+            # [[err-defs-end]]
+
             sleep_amount = 1e2 * Kp * err + ci[index]
             ci[index] = (1.0 - Zi) * ci[index] + 1e2 * Ki * err
             """PI controller"""
@@ -480,6 +508,8 @@ def main(argv):
             return True
 
         return value[0]  # This is the case when controller is 'C1'.
+
+    # [[controller-defs-end]]
 
     p0 = net.SpecialPlace("p0", producer=producer)
     t0 = net.Transition("t0")
@@ -608,8 +638,12 @@ def main(argv):
 
     """Automatically terminate after an amount of time"""
 
+    # [[loop-start-defs-start]]
+
     soyutnet.run(reg, extra_routines=[canceller(), uvicorn_main()])
     """Start simulation"""
+
+    # [[loop-start-defs-end]]
 
     for proc in procs:
         proc.join()

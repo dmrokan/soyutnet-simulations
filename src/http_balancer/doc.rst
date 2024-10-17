@@ -61,24 +61,27 @@ In this case, the main asyncio loop starts a `Uvicorn <https://www.uvicorn.org>`
 
 .. literalinclude:: ../../src/http_balancer/main.py
    :language: python
-   :lines: 602-605
-   :lineno-start: 602
+   :start-after: loop-start-defs-start
+   :end-before: loop-start-defs-end
+   :lineno-match:
 
 A new token is generated when the HTTP server receives a request. The request data is
 binded to the token.
 
 .. literalinclude:: ../../src/http_balancer/main.py
    :language: python
-   :lines: 273-292
-   :lineno-start: 273
+   :start-after: token-gen-defs-start
+   :end-before: token-gen-defs-end
+   :lineno-match:
 
 Then, the token is injected to the PT net. However, only the label and ID of token
 travels through the net. The binded object is registered in the :py:attr:`soyutnet.SoyutNet.TokenRegistry`.
 
 .. literalinclude:: ../../src/http_balancer/main.py
    :language: python
-   :lines: 302-308
-   :lineno-start: 302
+   :start-after: producer-defs-start
+   :end-before: producer-defs-end
+   :lineno-match:
 
 Consumers
 ^^^^^^^^^
@@ -89,16 +92,18 @@ given below.
 
 .. literalinclude:: ../../src/http_balancer/main.py
    :language: python
-   :lines: 387-411
-   :lineno-start: 387
+   :start-after: actual-token-defs-start
+   :end-before: actual-token-defs-end
+   :lineno-match:
 
 Then consumers redirect the HTTP request defined by the token to the actual HTTP servers
 running in children processes.
 
 .. literalinclude:: ../../src/http_balancer/main.py
    :language: python
-   :lines: 312-368
-   :lineno-start: 312
+   :start-after: token-processing-defs-start
+   :end-before: token-processing-defs-end
+   :lineno-match:
 
 Finally, the HTTP response is sent to original source by ``await uvicorn_send(...)`` lines.
 
@@ -110,8 +115,9 @@ which echo back the body of POST requests.
 
 .. literalinclude:: ../../src/http_balancer/main.py
    :language: python
-   :lines: 60-99
-   :lineno-start: 60
+   :start-after: http-server-defs-start
+   :end-before: http-server-defs-end
+   :lineno-match:
 
 It imitates doing a time consuming work by sleeping.
 
@@ -134,8 +140,9 @@ total processing times.
 
 .. literalinclude:: ../../src/http_balancer/main.py
    :language: python
-   :lines: 416-475
-   :lineno-start: 416
+   :start-after: controller-defs-start
+   :end-before: controller-defs-end
+   :lineno-match:
 
 Results
 -------
@@ -200,8 +207,9 @@ Comments
 
 .. literalinclude:: ../../src/http_balancer/main.py
    :language: python
-   :lines: 459-462
-   :lineno-start: 459
+   :start-after: err-defs-start
+   :end-before: err-defs-end
+   :lineno-match:
 
 * Controller 'C2' performs better if closer to "deterministic" service time is required.
 * The second plot is very similar to the results of :ref:`PI Controller <src.pi_controller:results>`
@@ -218,6 +226,7 @@ Reproduce
 
     make build
     make build=http_balancer
+    make clean=http_balancer
     make run=http_balancer
     make results=http_balancer
     make graph=http_balancer

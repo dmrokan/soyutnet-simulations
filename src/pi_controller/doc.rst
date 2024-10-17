@@ -68,15 +68,17 @@ rate. However, it can be adjusted by ``LOOP_DELAY`` parameter below.
 
 .. literalinclude:: ../../src/pi_controller/main.py
    :language: python
-   :lines: 215-219
-   :lineno-start: 215
+   :start-after: loop-delay-defs-start
+   :end-before: loop-delay-defs-end
+   :lineno-match:
 
 The producer logic is defined as below.
 
 .. literalinclude:: ../../src/pi_controller/main.py
    :language: python
-   :lines: 221-227
-   :lineno-start: 221
+   :start-after: producer-defs-start
+   :end-before: producer-defs-end
+   :lineno-match:
 
 Async function ``producer`` is called in a dedicated asyncio task loop with
 the period given by ``PRODUCE_DELAY``. The produced tokens are labeled by
@@ -90,8 +92,9 @@ to a TCP server and also constantly notifies the controllers :math:`k_1` and :ma
 
 .. literalinclude:: ../../src/pi_controller/main.py
    :language: python
-   :lines: 228-270
-   :lineno-start: 228
+   :start-after: consumer-defs-start
+   :end-before: consumer-defs-end
+   :lineno-match:
 
 .. _controllers:
 
@@ -103,8 +106,9 @@ assigned to one of the consumers. The important part is given below.
 
 .. literalinclude:: ../../src/pi_controller/main.py
    :language: python
-   :lines: 65-75
-   :lineno-start: 65
+   :start-after: tcp-server-defs-start
+   :end-before: tcp-server-defs-end
+   :lineno-match:
 
 It imitates doing a time consuming work by sleeping. The duration of sleep
 is assumed to be a random number with an adjustable mean value.
@@ -118,8 +122,9 @@ Controllers
 
 .. literalinclude:: ../../src/pi_controller/main.py
    :language: python
-   :lines: 270-309
-   :lineno-start: 270
+   :start-after: controller-defs-start
+   :end-before: controller-defs-end
+   :lineno-match:
 
 The important lines are
 
@@ -227,6 +232,7 @@ Reproduce
 
     make build
     make build=pi_controller
+    make clean=pi_controller
     make run=pi_controller
     make results=pi_controller
     make docs

@@ -101,6 +101,8 @@ def main(argv):
     treg = net.TokenRegistry()
     req_queues = [asyncio.Queue() for i in range(CONCURRENT_REQUESTS)]
 
+    # [[producer-defs-start]]
+
     LABEL_MAX = CONCURRENT_REQUESTS
 
     label_counter = 0
@@ -136,7 +138,11 @@ def main(argv):
 
     """Inject token"""
 
+    # [[producer-defs-end]]
+
     consumer_stats = {}
+
+    # [[consumer-defs-start]]
 
     async def consumer(place):
         async def http_server(uvicorn_scope, uvicorn_receive, uvicorn_send):
@@ -173,6 +179,8 @@ def main(argv):
         consumer_stats[ident]["count"] += 1
         consumer_stats[ident]["last_at"] = time.time()
 
+    # [[consumer-defs-end]]
+
     reg = net.PTRegistry()
     label_counter = 0
     for i in range(CONCURRENT_REQUESTS):
@@ -196,6 +204,8 @@ def main(argv):
             fh.write(reg.generate_graph())
 
         return 0
+
+    # [[loop-start-defs-start]]
 
     uvicorn_server = [None]
 
@@ -222,6 +232,8 @@ def main(argv):
         ],
     )
     """Start simulation"""
+
+    # [[loop-start-defs-end]]
 
     for name in consumer_stats:
         stats = consumer_stats[name]

@@ -46,6 +46,7 @@ requests from a single source.
 
     make build
     make build=pi_controller
+    make clean=pi_controller
     make run=pi_controller
     make results=pi_controller
     make graph=pi_controller
@@ -70,6 +71,7 @@ requests from a single source.
 
     make build
     make build=http_balancer
+    make clean=http_balancer
     make run=http_balancer
     make results=http_balancer
     make graph=http_balancer
@@ -95,6 +97,7 @@ requesters.
 
     make build
     make build=http_server
+    make clean=http_server
     make run=http_server
     make results=http_server
     make graph=http_server
