@@ -1,0 +1,30 @@
+digraph Net {
+	subgraph cluster_0 {
+		p1_0 [shape="circle",fontsize="20",style="filled",color="#000000",fillcolor="#dddddd",label="",xlabel="p1",height="1",width="1",penwidth=3];
+		q1_0 [shape="circle",fontsize="20",style="filled",color="#000000",fillcolor="#dddddd",label="",xlabel="q1",height="1",width="1",penwidth=3];
+		t11_0 [shape="box",fontsize="20",style="filled",color="#cccccc",fillcolor="#000000",label="",xlabel="t11",height="0.25",width="1.25",penwidth=3];
+		t12_0 [shape="box",fontsize="20",style="filled",color="#cccccc",fillcolor="#000000",label="",xlabel="t12",height="0.25",width="1.25",penwidth=3];
+		p2_0 [shape="circle",fontsize="20",style="filled",color="#000000",fillcolor="#dddddd",label="",xlabel="p2",height="1",width="1",penwidth=3];
+		q2_0 [shape="circle",fontsize="20",style="filled",color="#000000",fillcolor="#dddddd",label="",xlabel="q2",height="1",width="1",penwidth=3];
+		t21_0 [shape="box",fontsize="20",style="filled",color="#cccccc",fillcolor="#000000",label="",xlabel="t21",height="0.25",width="1.25",penwidth=3];
+		t22_0 [shape="box",fontsize="20",style="filled",color="#cccccc",fillcolor="#000000",label="",xlabel="t22",height="0.25",width="1.25",penwidth=3];
+		p3_0 [shape="circle",fontsize="20",style="filled",color="#000000",fillcolor="#dddddd",label="",xlabel="p3",height="1",width="1",penwidth=3];
+		q3_0 [shape="circle",fontsize="20",style="filled",color="#000000",fillcolor="#dddddd",label="",xlabel="q3",height="1",width="1",penwidth=3];
+		t31_0 [shape="box",fontsize="20",style="filled",color="#cccccc",fillcolor="#000000",label="",xlabel="t31",height="0.25",width="1.25",penwidth=3];
+		t32_0 [shape="box",fontsize="20",style="filled",color="#cccccc",fillcolor="#000000",label="",xlabel="t32",height="0.25",width="1.25",penwidth=3];
+		t32_0 -> p1_0 [fontsize="20",label="{1}",minlen="2",penwidth="3"];
+		t11_0 -> q1_0 [fontsize="20",label="{1}",minlen="2",penwidth="3"];
+		p1_0 -> t11_0 [fontsize="20",label="{1}",minlen="2",penwidth="3"];
+		q1_0 -> t12_0 [fontsize="20",label="{1}",minlen="2",penwidth="3"];
+		t32_0 -> p2_0 [fontsize="20",label="{2}",minlen="2",penwidth="3"];
+		t21_0 -> q2_0 [fontsize="20",label="{2}",minlen="2",penwidth="3"];
+		p2_0 -> t21_0 [fontsize="20",label="{2}",minlen="2",penwidth="3"];
+		q2_0 -> t22_0 [fontsize="20",label="{2}",minlen="2",penwidth="3"];
+		t12_0 -> p3_0 [fontsize="20",label="{1}",minlen="2",penwidth="3"];
+		t22_0 -> p3_0 [fontsize="20",label="{2}",minlen="2",penwidth="3"];
+		t31_0 -> q3_0 [fontsize="20",label="2 {2,1}",minlen="2",penwidth="3"];
+		p3_0 -> t31_0 [fontsize="20",label="2 {2,1}",minlen="2",penwidth="3"];
+		q3_0 -> t32_0 [fontsize="20",label="2 {2,1}",minlen="2",penwidth="3"];
+	}
+	clusterrank=none;
+}

@@ -10,6 +10,7 @@ Subpackages
    src.pi_controller
    src.http_balancer
    src.http_server
+   src.timed_net
 
 Module contents
 ---------------

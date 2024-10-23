@@ -104,6 +104,31 @@ requesters.
 
 :doc:`Documentation </src.http_server>`
 
+Timed net
+^^^^^^^^^
+
+This simulations implements a temporal-aware PT net by attaching time information
+to the PT net tokens. It simulates a supply chain depending on two component
+producers and an assembler.
+
+**Running:**
+
+.. code:: bash
+
+    git clone https://github.com/dmrokan/soyutnet-simulations
+    sudo apt install graphviz python3-venv
+    python3 -m venv venv
+    source venv/bin/activate
+
+    make build
+    make build=timed_net
+    make clean=timed_net
+    make run=timed_net
+    make results=timed_net
+    make graph=timed_net
+
+:doc:`Documentation </src.timed_net>`
+
 Building
 --------
 

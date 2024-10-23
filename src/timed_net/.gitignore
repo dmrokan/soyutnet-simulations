@@ -1,0 +1,13 @@
+*
+
+!.gitignore
+!__init__.py
+!__main__.py
+!doc.rst
+!graph.gv
+!graph.png
+!main.py
+!requirements.txt
+!results.py
+!net_diagram.png
+!results.txt

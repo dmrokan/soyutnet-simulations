@@ -7,7 +7,7 @@ ifneq (,$(args))
 	ARGS := $(args)
 endif
 
-SIMULATIONS = pi_controller http_balancer http_server
+SIMULATIONS = pi_controller http_balancer http_server timed_net
 GRAPHS = $(patsubst %,src/%/graph.gv,$(SIMULATIONS))
 GRAPHS_PIX = $(patsubst %,src/%/graph.png,$(SIMULATIONS))
 
