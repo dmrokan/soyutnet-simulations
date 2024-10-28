@@ -17,16 +17,22 @@ from ..common.clean import clean
 
 MINS = 60
 DIR = os.path.dirname(os.path.realpath(__file__))
+SIMULATION_TIME = 0.2
+CONTROLLER_TYPE = ["strict", "weak"]
+EPSILONS = [1e-2, 1e-1]
 
 # fmt: off
 
 # [[rng-params-defs-start]]
 
 RNG_PARAMS = [
-    list(range(10 * MINS, 30 * MINS, 10 * MINS)), # mu_1
-    list(range(1 * MINS, 3 * MINS, MINS)),        # sigma_1
-    list(range(10 * MINS, 30 * MINS, 10 * MINS)), # mu_2
-    list(range(1 * MINS, 3 * MINS, MINS)),        # sigma_2
+    #mu_1,   sigma_1,   mu_2,    sigma_2 (minutes)
+    (100,    5,         100,     5),
+    (100,    25,        100,     25),
+    (100,    5,         50,      5),
+    (50,     5,         100,     25),
+    (100,    5,         20,      5),
+    (20,     5,         100,     25),
 ]
 
 # [[rng-params-defs-end]]
@@ -47,15 +53,28 @@ def _main(argv):
     with open(log_file, "w") as fh:
         fh.write('{ "trials": [' + os.linesep)
 
-    for rng in product(*RNG_PARAMS):
-        print(rng)
-        args = ["", "-o", log_file, "-r", ",".join(map(str, rng))]
-        args += argv[1:]
-        print("Starting simulation with arguments:")
-        print("  ", args)
-        main(args)
-        with open(log_file, "a") as fh:
-            fh.write(f",{os.linesep}")
+    for eps in EPSILONS:
+        for cont in CONTROLLER_TYPE:
+            for rng in RNG_PARAMS:
+                args = [
+                    "",
+                    "-o",
+                    log_file,
+                    "-r",
+                    ",".join(map(lambda x: str(x * MINS), rng)),
+                    "-T",
+                    SIMULATION_TIME,
+                    "-C",
+                    cont,
+                    "-e",
+                    str(eps),
+                ]
+                args += argv[1:]
+                print("Starting simulation with arguments:")
+                print("  ", args)
+                main(args)
+                with open(log_file, "a") as fh:
+                    fh.write(f",{os.linesep}")
 
     with open(log_file, "a") as fh:
         fh.write("{}]}" + os.linesep)

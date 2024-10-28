@@ -9,9 +9,8 @@ from pathlib import Path
 import math
 from collections import OrderedDict
 from functools import partial
-
-import numpy as np
-import matplotlib.pyplot as plt
+import statistics
+import operator
 
 
 DIR = os.path.dirname(os.path.realpath(__file__))
@@ -71,40 +70,95 @@ def load_results():
     if data is None:
         raise RuntimeError("Could not load results")
 
-    results = []
+    moments = []
 
     for trial in data["trials"]:
         if "production_time" not in trial:
             continue
-        pt = np.array(trial["production_time"], dtype=np.float64)
+        controller_stats = trial["controller_stats"]
+        if controller_stats["weak"] == 1 or controller_stats["eps"] > 1e-2:
+            continue
+        pt = trial["production_time"]
         dist1 = trial["params"]["PRODUCER1_DELAY"]
         dist2 = trial["params"]["PRODUCER2_DELAY"]
+        dt = list(map(operator.sub, pt[1:], pt[:-1]))
 
-        mu = joint_mean(dist1, dist2)
-        std = joint_variance(dist1, dist2) ** 0.5
-        res = [mu, std]
-        dt = pt[1:] - pt[:-1]
-        res.append(np.mean(dt).item(0))
-        res.append(np.var(dt).item(0) ** 0.5)
-        results.append(res)
+        mu0 = joint_mean(dist1, dist2)
+        mu = statistics.mean(dt)
+        std0 = joint_variance(dist1, dist2) ** 0.5
+        std = statistics.variance(dt) ** 0.5
+        res = [mu, mu0, std, std0]
+        moments.append(res)
 
-    return results
+    data["moments"] = moments
+
+    return data
 
 
 def main(argv):
     results = load_results()
     output_file = open(DIR + "/results.txt", "w")
-    _print = partial(print, end="", file=output_file)
-    _print_line = partial(print, file=output_file)
+    rest_suffix = ".."
+    line_suffix = " " * len(rest_suffix)
+    _table = partial(print, file=output_file)
+    _print = lambda *args: print(line_suffix, *args, end="", file=output_file)
+    _print_line = lambda *args: print(line_suffix, *args, file=output_file)
+    _print_directive = lambda *args: print(rest_suffix, *args, file=output_file)
     tab = "\t\t"
+    column_width = 8
+    sep = "=" * (column_width - 1)
 
-    tags = ["mu0", "std0", "mu", "std"]
-    {_print(f"{val:>8}") for val in tags}
-    _print_line(os.linesep)
-
-    for res in results:
-        {_print(f"{int(val):>8}") for val in res}
+    def print_separator(n):
+        {_print(f"{sep:<{column_width}}") for i in range(n)}
         _print_line()
+
+    _table("table-1-start")
+    _print_directive("_table_1:" + os.linesep)
+    _print_directive("table:: **Table 1:** |table_1|")
+    _print_line(":width: 100%" + os.linesep)
+    tags = ["mu", "mu0", "std", "std0"]
+    print_separator(len(tags))
+    {_print(f"{val:<{column_width}}") for val in tags}
+    _print_line()
+    print_separator(len(tags))
+
+    for stat in results["moments"]:
+        {_print(f"{int(val):<{column_width}}") for val in stat}
+        _print_line()
+
+    print_separator(len(tags))
+
+    _table("table-1-end")
+
+    _table("table-2-start")
+    _print_directive("_table_2:" + os.linesep)
+    _print_directive("table:: **Table 2:** |table_2|")
+    _print_line(":width: 100%" + os.linesep)
+
+    for i, trial in enumerate(results["trials"]):
+        if "controller_stats" not in trial:
+            continue
+        controller_stats = trial["controller_stats"]
+        params = trial["params"]
+        dt = int(params["PRODUCER1_DELAY"][0] - params["PRODUCER2_DELAY"][0])
+        real_slow = int(dt > 0) + 1
+        dt = abs(dt)
+        slow = controller_stats["slow"]
+        if slow != real_slow:
+            slow = f"{slow}*"
+        controller_stats["slow"] = slow
+        controller_stats["Dt0"] = dt
+        dt_hat = controller_stats["Dt"]
+        controller_stats["err"] = round(abs((dt_hat - dt) / (dt_hat + 1e-2)), 2)
+        if i == 0:
+            print_separator(len(controller_stats))
+            {_print(f"{key:<{column_width}}") for key in controller_stats}
+            _print_line()
+            print_separator(len(controller_stats))
+        {_print(f"{value:<{column_width}}") for value in controller_stats.values()}
+        _print_line()
+    print_separator(len(controller_stats))
+    _table("table-2-end")
 
     return 0
 

@@ -141,7 +141,6 @@ Building
 
     make docs
 
-
 `SoyutNet <https://github.com/dmrokan/soyutnet>`__
 --------------------------------------------------
 

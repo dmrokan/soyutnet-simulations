@@ -18,7 +18,7 @@ In the diagram,
 * The components are assembled and served to the consumer.
 * Lastly, the consumer places a new order to the producers.
 
-The diagram below shows the auto-generated PT net by `SoyutNet <https://soyutnet.readthedocs.io/>`__.
+The picture below is the auto-generated PT net diagram by `SoyutNet <https://soyutnet.readthedocs.io/>`__.
 
 .. image:: ../../src/timed_net/graph.png
    :align: center
@@ -110,14 +110,51 @@ The mean and variance of :math:`X` is given as
    \theta &= \sqrt{\sigma_1^2+\sigma_2^2} \\
    \alpha &= \frac{\mu_1-\mu_2}{\theta}
 
-where :math:`\Phi` and :math:`\phi` are the Gaussian functions representing normal random
-distributions [nadarajah2008]_.
+where :math:`\Phi` and :math:`\phi` are the CDF and PDF of normal random
+distribution [nadarajah2008]_.
 
 .. literalinclude:: ../../src/timed_net/results.py
    :language: python
    :start-after: normal-dist-func-defs-start
    :end-before: normal-dist-func-defs-end
    :lineno-match:
+
+Real-time moment estimation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The moments :math:`E[X], E[X^2]` and variance :math:`Var[X]` can be estimated
+by dynamic averaging of observed random variable :math:`x_n`.
+
+.. math::
+
+   E[x_n] &= \mu \\
+   Var[x_n] &= E[x_n^2] - \mu^2 = \sigma^2
+
+For this purpose, a special ``list`` class ``NormalSamples`` is implemented.
+
+.. literalinclude:: ../../src/timed_net/main.py
+   :language: python
+   :start-after: stats-list-defs-start
+   :end-before: stats-list-defs-end
+   :lineno-match:
+
+As products arrive, the difference between the ordering time and arrival time is
+calculated. When this delta time is appended to the ``NormalSamples``, it automatically
+updates moments and variance.
+
+.. literalinclude:: ../../src/timed_net/main.py
+   :language: python
+   :start-after: estimation-defs-start
+   :end-before: estimation-defs-end
+   :lineno-match:
+
+If last N samples are very close to each other and the expected joint probability
+distrbution, the ``NormalSamples`` instance informs about convergence.
+
+* ``mu`` is the estimate of moment calculated by dynamic averaging.
+* ``eps`` the average change in current and previous ``mu``.
+* ``eps0`` is the max of last ``self._cc`` number of ``eps`` values
+  which is used to determine convergence.
 
 Estimate producer delays
 ------------------------
@@ -126,7 +163,63 @@ The problem is developing an algorithm to estimate the producer delays separatel
 by using the difference between the time a new order is placed and the time when
 the product is received.
 
-[Work in progress]
+System model
+^^^^^^^^^^^^
+
+A simple model of the producer/consumer flow can be
+
+.. math::
+   x_1[n+1] &= w_1[n] + u_1[n] \\
+   x_2[n+1] &= w_2[n] + u_2[n] \\
+   x[n+1] &= \max\left\{x_1[n], x_2[n]\right\} \\
+   y[n] = x[n]
+
+* :math:`n` is the product counter starting from zero.
+* :math:`x_i` is the production time of component_i.
+* :math:`w_i` is a Gaussian random variable,
+  :math:`E[w_i] = \mu_i, Var[w_i] = \sigma_i^2`.
+* :math:`y = x` is the total production observed by the consumer,
+  :math:`E[y] = \mu, Var[y] = \sigma^2`.
+* :math:`u_i (sec)` denotes postponing the orders  by the consumer. It is assumed that the consumer
+  can schedule orders for later instead of placing them immediately.
+* The units are seconds.
+
+State machine observer/controller scheme
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The observer/controller scheme runs a few tests on the producer/consumer flow.
+The order of tests are implemented as a state machine with the states below
+
+.. literalinclude:: ../../src/timed_net/main.py
+   :language: python
+   :start-after: controller-state-defs-start
+   :end-before: controller-state-defs-end
+   :lineno-match:
+
+* ``OBSERVE_JOINT_DIST``: Estimate joint mean (:math:`\mu`) and variance (:math:`\sigma`).
+* ``TEST_PRODUCER1``: Find out producer1's response by postponing orders.
+* ``TEST_PRODUCER2``: Find out producer2's response by postponing orders.
+* ``ESTIMATE_DELAYS``: Calculate the difference between :math:`\mu_1` and
+  :math:`\mu_2` approximately.
+* ``DONE``: Exit simulation.
+
+The state machine is implemented as below.
+
+.. literalinclude:: ../../src/timed_net/main.py
+   :language: python
+   :start-after: controller-defs-start
+   :end-before: controller-defs-end
+   :lineno-match:
+
+#. Set :math:`u_1[n] = u_2[n] = 0` for all n,
+#. ``OBSERVE_JOINT_DIST``: Estimate the reference :math:`(\mu_0, \sigma_0)` and record.
+#. ``TEST_PRODUCER1``: Set :math:`u_1[n] = \mu_0, u_2[n] = 0` for all n.
+#. ``OBSERVE_JOINT_DIST``: Estimate :math:`(\mu_1, \sigma_1)` and record.
+#. ``TEST_PRODUCER2``: Set :math:`u_1[n] = 0, u_2[n] = \mu_0` for all n.
+#. ``OBSERVE_JOINT_DIST``: Estimate :math:`(\mu_2, \sigma_2)` and record.
+#. ``ESTIMATE_DELAYS``: The difference between the production time of producers is
+   :math:`dt = |\mu_1 - \mu_2|` and the index of slow producer is ``int(dt > 0) + 1``.
+#. ``DONE``: Exit.
 
 Results
 -------
@@ -140,16 +233,50 @@ as defined below in `__main__.py <https://github.com/dmrokan/soyutnet-simulation
    :end-before: rng-params-defs-end
    :lineno-match:
 
-The table below shows the joint probability distribution characteristics.
+The :ref:`table <table_1>` below shows the joint probability distribution characteristics.
 
 * ``mu0`` is :math:`E[X]` in the :ref:`equation <eq_joint_probability>` above.
 * ``std0`` is :math:`\sqrt{Var[X]}` in the :ref:`equation <eq_joint_probability>` above.
 * ``mu`` is obtained by calculating the mean of the difference of :ref:`saved timings <saved_timings>`.
 * ``std`` is obtained by calculating the standard deviation of the difference
   of :ref:`saved timings <saved_timings>`.
-* The units are seconds.
+* The values are in seconds.
 
-.. literalinclude:: ../../src/timed_net/results.txt
+.. |table_1| replace:: Average and actual values.
+
+.. include:: ../../src/timed_net/results.txt
+   :start-after: table-1-start
+   :end-before: table-1-end
+
+The next :ref:`table <table_2>` shows estimation results.
+
+* ``weak = 1`` means that only mean values are used to determine convergence.
+* ``eps`` is the relative error tolerance to determine convergence.
+* ``iter`` is the final value of the product counter.
+* ``mu``, ``mu`` and ``Dmu`` are estimated, actual mean value and the relative error.
+* ``std``, ``std0`` and ``Dstd`` are estimated, actual standard deviation and the relative error.
+* ``slow`` is the estimated slow producer indices ('*' indicates wrong estimation).
+* ``Dt``, ``Dt0`` and ``err`` are estimated, actual production delay differences and their relative error.
+      e.g. ``slow = 1`` and ``Dt = 1000`` mean the producer1 is 1000 seconds slower than the producer2.
+* The values are in seconds except ``weak``, ``iter`` and ``slow``, former are unitless.
+
+.. |table_2| replace:: Observer estimations.
+
+.. include:: ../../src/timed_net/results.txt
+   :start-after: table-2-start
+   :end-before: table-2-end
+
+Comments
+--------
+
+* :ref:`Table 1 <table_1>` shows that mean and variance is very close to the values
+  obtained from the results of :ref:`equations <eq_joint_probability>`.
+* :ref:`Table 2 <table_2>` shows that estimator works correctly and much faster
+  when variance estimation is ignored by using a weaker convergence metric.
+  It can be further hasten when relative error tolerance ``eps`` is increased
+  when an accurate estimation is not necessary.
+
+  It is hard to estimate small differences between :math:`\mu_1` and :math:`\mu_2`.
 
 References
 ----------
