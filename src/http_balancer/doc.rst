@@ -130,7 +130,7 @@ Additionally, a new control scheme is implemented which is labeled by 'C3'.
 C3
 ^^^
 
-The controller scheme :ref:`C2 <C2>` aims to make number of requests processed by two consumer equal
+The controller scheme :ref:`C2 <src.pi_controller:c2>` aims to make number of requests processed by two consumer equal
 by applying a PI control rule to the difference between the number of requests processed.
 It purposedly delays a branch if it is processing faster than the other.
 

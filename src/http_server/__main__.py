@@ -48,7 +48,7 @@ def _main(argv):
     uv_cmd = ["/bin/bash", f"{DIR}/test_uvicorn.sh"]
 
     results_fh = open(DIR + "/results.txt", "w")
-    results_fh.truncate()
+    results_fh.truncate(0)
 
     log_file = f"{DIR}/results.json"
     with open(log_file, "w") as fh:

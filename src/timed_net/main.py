@@ -18,6 +18,7 @@ from soyutnet import SoyutNet
 from soyutnet.constants import GENERIC_ID, GENERIC_LABEL, INVALID_ID
 
 from . import results
+from ..common import logged
 
 
 def USAGE():
@@ -59,7 +60,8 @@ def USAGE():
     print(USAGE.__doc__)
 
 
-def main(argv):
+@logged
+def main(argv, OUTPUT_FILE):
     """
     Main entry point of the simulation.
 
@@ -69,7 +71,6 @@ def main(argv):
     random.seed(token_bytes(16))
 
     OUTPUT_FILENAME = None
-    OUTPUT_FILE = sys.stdout
     GENERATE_GRAPH_AND_EXIT = False
     SIMULATION_TIME = 2
     WEAK_COMPARISON = False
@@ -93,7 +94,6 @@ def main(argv):
             PRODUCER2_DELAY = tuple(float(val) for val in tmp[2:])
         elif o == "-o":
             OUTPUT_FILENAME = a
-            OUTPUT_FILE = open(a, "a")
         elif o == "-G":
             GENERATE_GRAPH_AND_EXIT = True
         elif o == "-T":
@@ -230,24 +230,18 @@ def main(argv):
 
         def mean(self):
             """
-            If max of last self._cc samples are less than self._eps and
-            last sample is close to the expected value, it converged.
+            If max of last self._cc samples are less than self._eps, then it converged.
             """
             mu = self._moments[0][0]
             conv = self._moments[0][2] < self._eps
-            if self._rng_params is not None:
-                conv &= relative_error(mu, self._rng_params[0]) < self._eps
             return (mu, conv or self._size() >= self._max_size)
 
         def variance(self):
             """
-            If max of last self._cc samples are less than self._eps and
-            last sample is close to the expected value, it converged.
+            If max of last self._cc samples are less than self._eps and, then it converged.
             """
             var = self._variance[0]
             conv = self._variance[2] < self._eps
-            if self._rng_params is not None:
-                conv &= relative_error(var, self._rng_params[2]) < self._eps
             return (var, conv or self._size() >= self._max_size)
 
         def get_stats(self):
@@ -396,12 +390,9 @@ def main(argv):
                     self._change_state(State.OBSERVE_JOINT_DIST)
                 case State.ESTIMATE_DELAYS:
                     """4. Estimate the slow producer"""
-                    t0 = self._observed[0][2]
                     test1 = self._observed[1]
                     test2 = self._observed[2]
-                    t1 = test1[2] - t0
-                    t2 = test2[2] - t0
-                    dt = t1 - t2
+                    dt = test1[2] - test2[2]
                     index = int(dt > 0)
                     dt = abs(dt)
                     self._slow_producer = (index + 1, dt)
@@ -515,9 +506,8 @@ def main(argv):
     }
 
     if GENERATE_GRAPH_AND_EXIT:
-        OUTPUT_FILE.close()
-        with open(OUTPUT_FILENAME, "w") as fh:
-            fh.write(reg.generate_graph())
+        OUTPUT_FILE.truncate(0)
+        OUTPUT_FILE.write(reg.generate_graph())
 
         return 0
 
@@ -547,9 +537,6 @@ def main(argv):
             }
         )
     )
-
-    OUTPUT_FILE.close()
-    """Dump results"""
 
     return 0
 

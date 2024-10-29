@@ -14,6 +14,8 @@ from soyutnet.constants import GENERIC_ID, GENERIC_LABEL
 import uvicorn
 import psutil
 
+from ..common import logged
+
 
 def server_main(args, cond):
     import random
@@ -206,7 +208,8 @@ def USAGE():
     print(USAGE.__doc__)
 
 
-def main(argv):
+@logged
+def main(argv, OUTPUT_FILE):
     """
     Main entry point of the simulation.
 
@@ -220,7 +223,6 @@ def main(argv):
     STOP_AFTER = 10
     L = 2
     OUTPUT_FILENAME = None
-    OUTPUT_FILE = sys.stdout
     LOAD = []
     CONTROLLER_TYPE = "C1"
     GENERATE_GRAPH_AND_EXIT = False
@@ -245,7 +247,6 @@ def main(argv):
             STOP_AFTER = float(a)
         elif o == "-o":
             OUTPUT_FILENAME = a
-            OUTPUT_FILE = open(a, "a")
         elif o == "-L":
             load_vs_time = a.split(";")
             for l in load_vs_time:
@@ -581,9 +582,8 @@ def main(argv):
     )
 
     if GENERATE_GRAPH_AND_EXIT:
-        OUTPUT_FILE.close()
-        with open(OUTPUT_FILENAME, "w") as fh:
-            fh.write(reg.generate_graph(label_names={L: "◆", GENERIC_LABEL: "○"}))
+        OUTPUT_FILE.truncate(0)
+        OUTPUT_FILE.write(reg.generate_graph(label_names={L: "◆", GENERIC_LABEL: "○"}))
 
         return 0
 
@@ -671,7 +671,6 @@ def main(argv):
         ),
         file=OUTPUT_FILE,
     )
-    OUTPUT_FILE.close()
     """Dump results"""
 
     return 0

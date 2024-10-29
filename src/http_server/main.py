@@ -17,6 +17,7 @@ import uvicorn
 import psutil
 
 from . import uvicorn_main
+from ..common import logged
 
 
 def USAGE():
@@ -54,7 +55,8 @@ def USAGE():
     print(USAGE.__doc__)
 
 
-def main(argv):
+@logged
+def main(argv, OUTPUT_FILE):
     """
     Main entry point of the simulation.
 
@@ -64,7 +66,6 @@ def main(argv):
     random.seed(token_bytes(16))
 
     OUTPUT_FILENAME = None
-    OUTPUT_FILE = sys.stdout
     GENERATE_GRAPH_AND_EXIT = False
     HOST = "127.0.0.1"
     PORT = 5000
@@ -82,7 +83,6 @@ def main(argv):
             RNG_PARAMS = tuple(tmp)
         elif o == "-o":
             OUTPUT_FILENAME = a
-            OUTPUT_FILE = open(a, "a")
         elif o == "-G":
             GENERATE_GRAPH_AND_EXIT = True
         elif o == "-H":
@@ -199,9 +199,8 @@ def main(argv):
     label_counter = 0
 
     if GENERATE_GRAPH_AND_EXIT:
-        OUTPUT_FILE.close()
-        with open(OUTPUT_FILENAME, "w") as fh:
-            fh.write(reg.generate_graph())
+        OUTPUT_FILE.truncate(0)
+        OUTPUT_FILE.write(reg.generate_graph())
 
         return 0
 
@@ -256,7 +255,6 @@ def main(argv):
         ),
         file=OUTPUT_FILE,
     )
-    OUTPUT_FILE.close()
     """Dump results"""
 
     return 0

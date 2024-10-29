@@ -148,8 +148,8 @@ updates moments and variance.
    :end-before: estimation-defs-end
    :lineno-match:
 
-If last N samples are very close to each other and the expected joint probability
-distrbution, the ``NormalSamples`` instance informs about convergence.
+If last N samples are very close to each other distrbution,
+the ``NormalSamples`` instance informs about convergence.
 
 * ``mu`` is the estimate of moment calculated by dynamic averaging.
 * ``eps`` the average change in current and previous ``mu``.
@@ -172,7 +172,7 @@ A simple model of the producer/consumer flow can be
    x_1[n+1] &= w_1[n] + u_1[n] \\
    x_2[n+1] &= w_2[n] + u_2[n] \\
    x[n+1] &= \max\left\{x_1[n], x_2[n]\right\} \\
-   y[n] = x[n]
+   y[n] &= x[n]
 
 * :math:`n` is the product counter starting from zero.
 * :math:`x_i` is the production time of component_i.
@@ -253,7 +253,7 @@ The next :ref:`table <table_2>` shows estimation results.
 * ``weak = 1`` means that only mean values are used to determine convergence.
 * ``eps`` is the relative error tolerance to determine convergence.
 * ``iter`` is the final value of the product counter.
-* ``mu``, ``mu`` and ``Dmu`` are estimated, actual mean value and the relative error.
+* ``mu``, ``mu0`` and ``Dmu`` are estimated, actual mean value and the relative error.
 * ``std``, ``std0`` and ``Dstd`` are estimated, actual standard deviation and the relative error.
 * ``slow`` is the estimated slow producer indices ('*' indicates wrong estimation).
 * ``Dt``, ``Dt0`` and ``err`` are estimated, actual production delay differences and their relative error.
