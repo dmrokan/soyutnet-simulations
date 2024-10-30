@@ -1,5 +1,6 @@
 *
 
 !.gitignore
-!clean.py
-!__init__.py
+!Makefile
+!*.py
+!*.sh

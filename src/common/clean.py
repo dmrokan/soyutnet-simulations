@@ -26,10 +26,16 @@ def clean(DIR):
         while line:
             line = fh.readline()
             if line.startswith("!"):
-                ignored.append(line[1:].strip())
+                files = [
+                    str(Path(fn).resolve())
+                    for fn in glob.glob(DIR + f"/{line[1:].strip()}")
+                ]
+                ignored += files
 
     files = glob.glob(DIR + "/*")
     for f in files:
         p = Path(f)
-        if p.is_file() and p.name not in ignored:
+        abs_path = str(p.resolve())
+        if p.is_file() and abs_path not in ignored:
+            print("Removing:", abs_path)
             p.unlink()
