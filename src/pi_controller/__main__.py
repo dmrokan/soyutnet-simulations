@@ -2,6 +2,8 @@
 
 import os
 import sys
+from itertools import product
+
 from .main import main, USAGE
 from .results import main as show_results
 from ..common.clean import clean
@@ -36,27 +38,26 @@ def _main(argv):
         with open(log_file, "w") as fh:
             fh.write('{ "trials": [' + os.linesep)
 
-        for c in CONT:
-            for j in range(1, END + 1):
-                args = [
-                    "",
-                    "-c",
-                    c,
-                    "-r",
-                    RNG_PARAMS,
-                    "-o",
-                    log_file,
-                    "-p",
-                    PRODUCE_RATE_SCALER * j,
-                    "-K",
-                    k,
-                ]
-                args += argv
-                print("Starting simulation with arguments:")
-                print("  ", args)
-                main(args)
-                with open(log_file, "a") as fh:
-                    fh.write(f",{os.linesep}")
+        for c, j in product(CONT, range(1, END + 1)):
+            args = [
+                "",
+                "-c",
+                c,
+                "-r",
+                RNG_PARAMS,
+                "-o",
+                log_file,
+                "-p",
+                PRODUCE_RATE_SCALER * j,
+                "-K",
+                k,
+            ]
+            args += argv
+            print("Starting simulation with arguments:")
+            print("  ", args)
+            main(args)
+            with open(log_file, "a") as fh:
+                fh.write(f",{os.linesep}")
 
         with open(log_file, "a") as fh:
             fh.write("{}]}" + os.linesep)

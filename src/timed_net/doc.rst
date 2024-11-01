@@ -221,6 +221,41 @@ The state machine is implemented as below.
    :math:`dt = |\mu_1 - \mu_2|` and the index of slow producer is ``int(dt > 0) + 1``.
 #. ``DONE``: Exit.
 
+Integer arithmetic implementation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this simulation, all calculations are done on Python's
+`Fraction <https://docs.python.org/3/library/fractions.html>`__ instances instead
+of ``float`` s. This simulation implements a new class called ``Qp`` to ensure
+all basic math operations returns a ``Fraction``.
+
+A ``Fraction`` can be instantiated by an ``int, float, str`` and it converts
+the input to a tuple of ``(numerator, denominator)`` of type ``tuple[int, uint]``.
+Also, a limit to the denominator can be set. For example:
+
+.. code:: python
+
+   >>> Fraction(-0.3).limit_denominator(10)
+   Fraction(-3, 10)
+   >>> Fraction(0.3).limit_denominator(2)
+   Fraction(1, 2)
+   >>> Fraction(0.3).limit_denominator(1)
+   Fraction(0, 1)
+
+In the example, ``Fraction(0, 1)`` and ``Fraction(-3, 10)`` are equivalent to :math:`0/1` and
+:math:`-3/10`. As the denominator limit increases, the precision of calculations increases.
+Because, the numbers less than one can still be represented in the calculations.
+
+.. literalinclude:: ../../src/timed_net/main.py
+   :language: python
+   :start-after: rational-num-defs-start
+   :end-before: rational-num-defs-end
+   :lineno-match:
+
+By using this reference implementation, it can be translated to work on an MCU platform.
+However, it will require limiting the magnitude of numerator together with the denominator.
+Because, the integer size is unlimited in Python.
+
 Results
 -------
 
@@ -260,21 +295,27 @@ The next :ref:`table <table_2>` shows estimation results.
       e.g. ``slow = 1`` and ``Dt = 1000`` mean the producer1 is 1000 seconds slower than the producer2.
 * The values are in seconds except ``weak``, ``iter`` and ``slow``, former are unitless.
 
-.. |table_2| replace:: Observer estimations.
+.. |table_2| replace:: Observer estimations (when max rational number denominator is 1. Meaning, the mean and variance are calculated by using integer arithmetic).
 
 .. include:: ../../src/timed_net/results.txt
    :start-after: table-2-start
    :end-before: table-2-end
+
+.. |table_3| replace:: Observer estimations (when max rational number denominator is 255).
+
+.. include:: ../../src/timed_net/results.txt
+   :start-after: table-3-start
+   :end-before: table-3-end
 
 Comments
 --------
 
 * :ref:`Table 1 <table_1>` shows that mean and variance is very close to the values
   obtained from the results of :ref:`equations <eq_joint_probability>`.
-* :ref:`Table 2 <table_2>` shows that estimator works correctly and much faster
-  when variance estimation is ignored by using a weaker convergence metric.
-  It can be further hasten when relative error tolerance ``eps`` is increased
-  when an accurate estimation is not necessary.
+* :ref:`Table 2 <table_2>` shows that estimator works correctly even if it operates on
+  integers. But, it can not estimate the variance by using integer precision.
+* :ref:`Table 3 <table_3>` shows that estimator works correctly when fractional numbers
+  are used. And, it can more or less estimate the variance.
 
   It is hard to estimate small differences between :math:`\mu_1` and :math:`\mu_2`.
 

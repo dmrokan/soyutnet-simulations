@@ -39,3 +39,5 @@ def clean(DIR):
         if p.is_file() and abs_path not in ignored:
             print("Removing:", abs_path)
             p.unlink()
+
+    return 0

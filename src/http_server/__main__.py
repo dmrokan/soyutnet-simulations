@@ -8,6 +8,7 @@ import random
 import string
 import time
 import math
+from itertools import product
 
 from .main import main, USAGE
 from .results import main as show_results
@@ -54,27 +55,21 @@ def _main(argv):
     with open(log_file, "w") as fh:
         fh.write('{ "trials": [' + os.linesep)
 
-    for c in CONT:
-        j = 0
-        for ac in AB_CONCURRENCY:
-            for mean in MEAN_VALS:
-                csv_fn = f"{DIR}/result_{c}_{ac}_{j}.csv"
-                proc = subprocess.Popen(
-                    ab_cmd + [str(ac), csv_fn, c], stdout=results_fh
-                )
+    for c, j_ac, mean in product(CONT, enumerate(AB_CONCURRENCY), MEAN_VALS):
+        j, ac = j_ac
+        csv_fn = f"{DIR}/result_{c}_{ac}_{j}.csv"
+        proc = subprocess.Popen(ab_cmd + [str(ac), csv_fn, c], stdout=results_fh)
 
-                if c != "UV":
-                    args = ["", "-o", log_file, "-A", str(proc.pid), "-C", ac, "-c", c]
-                    args += argv[1:]
-                    print("Starting simulation with arguments:")
-                    print("  ", args)
-                    main(args)
-                    with open(log_file, "a") as fh:
-                        fh.write(f",{os.linesep}")
-                else:
-                    subprocess.call(uv_cmd + [str(proc.pid), str(ac)])
-
-                j += 1
+        if c != "UV":
+            args = ["", "-o", log_file, "-A", str(proc.pid), "-C", ac, "-c", c]
+            args += argv[1:]
+            print("Starting simulation with arguments:")
+            print("  ", args)
+            main(args)
+            with open(log_file, "a") as fh:
+                fh.write(f",{os.linesep}")
+        else:
+            subprocess.call(uv_cmd + [str(proc.pid), str(ac)])
 
     with open(log_file, "a") as fh:
         fh.write("{}]}" + os.linesep)

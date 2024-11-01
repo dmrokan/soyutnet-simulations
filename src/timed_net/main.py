@@ -12,6 +12,7 @@ from collections import UserList, OrderedDict
 import operator
 from functools import reduce
 from enum import Enum, auto
+from fractions import Fraction
 
 import soyutnet
 from soyutnet import SoyutNet
@@ -76,6 +77,7 @@ def main(argv, OUTPUT_FILE):
     WEAK_COMPARISON = False
     CONTROLLER_TYPE = "strict"
     EPSILON = 1e-2
+    BIT_WIDTH = 1
 
     MINS = 60
 
@@ -85,7 +87,7 @@ def main(argv, OUTPUT_FILE):
     PRODUCER2_LABEL = 2
     T0 = 0
 
-    opts, args = getopt.getopt(argv[1:], "r:o:GT:WC:e:")
+    opts, args = getopt.getopt(argv[1:], "r:o:GT:WC:e:b:")
 
     for o, a in opts:
         if o == "-r":
@@ -104,6 +106,8 @@ def main(argv, OUTPUT_FILE):
             CONTROLLER_TYPE = a
         elif o == "-e":
             EPSILON = float(a)
+        elif o == "-b":
+            BIT_WIDTH = int(a)
 
     if CONTROLLER_TYPE == "weak":
         WEAK_COMPARISON = True
@@ -155,16 +159,101 @@ def main(argv, OUTPUT_FILE):
 
     # [[combiner-tr-defs-end]]
 
+    # [[rational-num-defs-start]]
+
+    class Qp:
+        def __init__(self, num=0, max_den=(2**BIT_WIDTH - 1)):
+            self._max_den = max_den
+            if isinstance(num, Qp):
+                num = num.num
+            self.num = self._new_num(num)
+
+        def _new_num(self, num):
+            return Fraction(num).limit_denominator(self._max_den)
+
+        @staticmethod
+        def tuple(iterable):
+            return tuple(map(Qp, iterable))
+
+        @staticmethod
+        def list(iterable):
+            return list(map(Qp, iterable))
+
+        def int_op(op, swap=False):
+            def inner(func):
+                def wrapped(self, *args):
+                    a, b = self, Qp(args[0])
+                    if swap:
+                        a, b = b, a
+                    return Qp(op(a.num, b.num))
+
+                return wrapped
+
+            return inner
+
+        # fmt: off
+        @int_op(operator.mul)
+        def __mul__(self, other): ...
+        @int_op(operator.truediv)
+        def __truediv__(self, other): ...
+        @int_op(operator.add)
+        def __add__(self, other): ...
+        @int_op(operator.sub)
+        def __sub__(self, other): ...
+        @int_op(operator.pow)
+        def __pow__(self, other): ...
+        @int_op(operator.gt)
+        def __gt__(self, other): ...
+        @int_op(operator.lt)
+        def __lt__(self, other): ...
+
+        @int_op(operator.mul, True)
+        def __rmul__(self, other): ...
+        @int_op(operator.truediv, True)
+        def __rtruediv__(self, other): ...
+        @int_op(operator.add, True)
+        def __radd__(self, other): ...
+        @int_op(operator.sub, True)
+        def __rsub__(self, other): ...
+        @int_op(operator.pow, True)
+        def __rpow__(self, other): ...
+        # fmt: on
+
+        def __str__(self):
+            return str(self.num)
+
+        def __float__(self):
+            return float(self.num)
+
+        def __int__(self):
+            return int(self.num)
+
+        def __abs__(self):
+            return Qp(abs(self.num))
+
+        def is_zero(self, eps=1e-2):
+            eps = max(eps, 1 / self._max_den)
+            return abs(self) < Qp(eps)
+
+    # [[rational-num-defs-end]]
+
     # [[stats-list-defs-start]]
 
-    relative_error = lambda a, b: abs((a - b) / b)
+    relative_error = lambda a, b, c=1 / (2**BIT_WIDTH - 1): abs((a - b) / (b + c))
 
     class NormalSamples(UserList):
-        def __init__(self, *args, eps=1e-2, convergence_condition=10, rng_params=None):
+        def __init__(
+            self,
+            *args,
+            eps=1e-2,
+            convergence_condition=10,
+            rng_params=None,
+            validate_conv=False,
+        ):
             super().__init__(*args)
             self._eps = eps
             self._moments = None
-            self._variance = (0, eps, 0.0)
+            self._variance = Qp.tuple((0, eps, 0.0))
             self._cc = convergence_condition
             self._rng_params = None
             if rng_params is not None:
@@ -172,11 +261,18 @@ def main(argv, OUTPUT_FILE):
             self._max_size = 600 * 1024 * 1024
             self._initialize_moments()
             self._iter = 0
+            self._validate_conv = validate_conv
+            if validate_conv:
+                self._last_n_dmu = Qp.list([0] * self._cc)
+                self._last_n_dvar = Qp.list([0] * self._cc)
 
             # [[stats-list-defs-end]]
 
         def _initialize_moments(self):
-            self._moments = [(0.0, self._eps, 0.0), (0.0, self._eps, 0.0)]
+            self._moments = [
+                Qp.tuple((0.0, self._eps, 0.0)),
+                Qp.tuple((0.0, self._eps, 0.0)),
+            ]
 
         def set_rng_params(self, rng_params):
             self._rng_params = tuple(rng_params) + (rng_params[-1] ** 2,)
@@ -187,6 +283,7 @@ def main(argv, OUTPUT_FILE):
         # [[estimation-defs-start]]
 
         def _update_moment(self, moment, val):
+            moment = Qp.tuple(moment)
             if abs(val) < 1e-2 * self._eps:
                 """Ignore very small numbers in statistics"""
                 return moment
@@ -199,6 +296,9 @@ def main(argv, OUTPUT_FILE):
             dmu = relative_error(mu_prev, mu)
             eps = (eps * l + dmu) / (l + 1)
             eps0 = max(eps0, eps)
+            assert isinstance(mu, Qp)
+            assert isinstance(eps, Qp)
+            assert isinstance(eps0, Qp)
             """
             Save the max of last self._cc samples which
             will be used for deciding convergence later.
@@ -211,17 +311,29 @@ def main(argv, OUTPUT_FILE):
         def _update_moments(self, val):
             """Real-time mean, variance estimation"""
             self._moments[0] = self._update_moment(self._moments[0], val)
-            val -= self._moments[0][0]
+            val -= float(self._moments[0][0])
             self._variance = self._update_moment(self._variance, val**2)
             self._moments[1] = tuple(
                 a**2 + b for a, b in zip(self._moments[0], self._variance)
             )
 
+            if self._validate_conv:
+                self._last_n_dmu = self._last_n_dmu[1:] + [self._moments[0][1]]
+                self._last_n_dvar = self._last_n_dvar[1:] + [self._variance[1]]
+
         def _compare_to_actual(self, moment, actual):
-            return relative_error(moment[0], actual) < self._eps
+            return relative_error(moment[0], actual).is_zero()
 
         def _size(self):
             return sys.getsizeof(self)
+
+        def validate_convergence(self, weak=False):
+            if self._validate_conv:
+                return max(self._last_n_dmu).is_zero() and (
+                    weak or max(self._last_n_dvar).is_zero()
+                )
+
+            return True
 
         def append(self, val):
             self._update_moments(val)
@@ -233,7 +345,7 @@ def main(argv, OUTPUT_FILE):
             If max of last self._cc samples are less than self._eps, then it converged.
             """
             mu = self._moments[0][0]
-            conv = self._moments[0][2] < self._eps
+            conv = self._moments[0][2].is_zero()
             return (mu, conv or self._size() >= self._max_size)
 
         def variance(self):
@@ -241,7 +353,7 @@ def main(argv, OUTPUT_FILE):
             If max of last self._cc samples are less than self._eps and, then it converged.
             """
             var = self._variance[0]
-            conv = self._variance[2] < self._eps
+            conv = self._variance[2].is_zero()
             return (var, conv or self._size() >= self._max_size)
 
         def get_stats(self):
@@ -334,6 +446,7 @@ def main(argv, OUTPUT_FILE):
                 self._production_time.append(tmp)
 
         def measure(self, dT):
+            assert isinstance(dT, int)
             self._production_delay.append(dT)
 
         def found(self):
@@ -342,17 +455,24 @@ def main(argv, OUTPUT_FILE):
             """
             mu, cond1 = self._production_delay.mean()
             sigma, cond2 = self._production_delay.variance()
+            cond0 = len(self._production_delay) > self._production_delay._cc
 
-            return (mu, sigma**0.5, cond1 and (self._weak or cond2))
+            if cond0 and cond1:
+                """Additional validation for convergence when needed"""
+                assert self._production_delay.validate_convergence(weak=True)
+
+            return (int(mu), int(sigma**0.5), cond0 and cond1 and (self._weak or cond2))
 
         def get_stats(self):
             stats = self._production_delay.get_stats()
             stats["slow"] = self._slow_producer[0]
             stats["Dt"] = int(self._slow_producer[1])
+            stats["bw"] = BIT_WIDTH
             stats["weak"] = int(self._weak)
             stats["eps"] = round(EPSILON, 3)
             stats.move_to_end("eps", last=False)
             stats.move_to_end("weak", last=False)
+            stats.move_to_end("bw", last=False)
             return stats
 
         def is_done(self):
@@ -367,6 +487,8 @@ def main(argv, OUTPUT_FILE):
                 case State.OBSERVE_JOINT_DIST:  # Initial state
                     """1. Validate that total production time is as expected."""
                     mu, std, conv = self.found()
+                    assert isinstance(mu, int)
+                    assert isinstance(std, int)
                     if conv:  # Check convergence
                         self._observed.append(self._u + (mu, std))
                         match self._state[-1]:  # Check previous state

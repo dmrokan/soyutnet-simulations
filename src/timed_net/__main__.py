@@ -20,6 +20,7 @@ DIR = os.path.dirname(os.path.realpath(__file__))
 SIMULATION_TIME = 0.2
 CONTROLLER_TYPE = ["strict", "weak"]
 EPSILONS = [1e-2, 1e-1]
+DEN_BIT_WIDTH = [1, 8]
 
 # fmt: off
 
@@ -53,28 +54,30 @@ def _main(argv):
     with open(log_file, "w") as fh:
         fh.write('{ "trials": [' + os.linesep)
 
-    for eps in EPSILONS:
-        for cont in CONTROLLER_TYPE:
-            for rng in RNG_PARAMS:
-                args = [
-                    "",
-                    "-o",
-                    log_file,
-                    "-r",
-                    ",".join(map(lambda x: str(x * MINS), rng)),
-                    "-T",
-                    SIMULATION_TIME,
-                    "-C",
-                    cont,
-                    "-e",
-                    str(eps),
-                ]
-                args += argv[1:]
-                print("Starting simulation with arguments:")
-                print("  ", args)
-                main(args)
-                with open(log_file, "a") as fh:
-                    fh.write(f",{os.linesep}")
+    for bw, eps, cont, rng in product(
+        DEN_BIT_WIDTH, EPSILONS, CONTROLLER_TYPE, RNG_PARAMS
+    ):
+        args = [
+            "",
+            "-o",
+            log_file,
+            "-r",
+            ",".join(map(lambda x: str(x * MINS), rng)),
+            "-T",
+            SIMULATION_TIME,
+            "-C",
+            cont,
+            "-e",
+            str(eps),
+            "-b",
+            bw,
+        ]
+        args += argv[1:]
+        print("Starting simulation with arguments:")
+        print("  ", args)
+        main(args)
+        with open(log_file, "a") as fh:
+            fh.write(f",{os.linesep}")
 
     with open(log_file, "a") as fh:
         fh.write("{}]}" + os.linesep)

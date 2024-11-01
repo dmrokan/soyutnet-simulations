@@ -35,9 +35,11 @@ $(GRAPHS_PIX): src/%/graph.png: src/%/graph.gv
 
 graphs: $(GRAPHS_PIX)
 
-docs: graphs dev-build
+compile:
 	sphinx-apidoc -o docs/source/ src/
 	cd docs && make html
+
+docs: dev-build graphs compile
 
 build:
 	pip install -r requirements.txt

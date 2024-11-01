@@ -82,6 +82,8 @@ def load_results():
         dist1 = trial["params"]["PRODUCER1_DELAY"]
         dist2 = trial["params"]["PRODUCER2_DELAY"]
         dt = list(map(operator.sub, pt[1:], pt[:-1]))
+        if len(dt) < 2:
+            continue
 
         mu0 = joint_mean(dist1, dist2)
         mu = statistics.mean(dt)
@@ -112,10 +114,17 @@ def main(argv):
         {_print(f"{sep:<{column_width}}") for i in range(n)}
         _print_line()
 
-    _table("table-1-start")
-    _print_directive("_table_1:" + os.linesep)
-    _print_directive("table:: **Table 1:** |table_1|")
-    _print_line(":width: 100%" + os.linesep)
+    def start_table(table_index):
+        _table(f"table-{table_index}-start")
+        _print_directive(f"_table_{table_index}:" + os.linesep)
+        _print_directive(f"table:: **Table {table_index}:** |table_{table_index}|")
+        _print_line(":width: 100%" + os.linesep)
+
+    def end_table(table_index):
+        _table(f"table-{table_index}-end")
+
+    start_table(1)
+
     tags = ["mu", "mu0", "std", "std0"]
     print_separator(len(tags))
     {_print(f"{val:<{column_width}}") for val in tags}
@@ -125,20 +134,25 @@ def main(argv):
     for stat in results["moments"]:
         {_print(f"{int(val):<{column_width}}") for val in stat}
         _print_line()
-
     print_separator(len(tags))
 
-    _table("table-1-end")
+    end_table(1)
 
-    _table("table-2-start")
-    _print_directive("_table_2:" + os.linesep)
-    _print_directive("table:: **Table 2:** |table_2|")
-    _print_line(":width: 100%" + os.linesep)
+    start_table(2)
 
-    for i, trial in enumerate(results["trials"]):
+    i = 0
+    prev_bw = 0
+    for trial in results["trials"]:
         if "controller_stats" not in trial:
             continue
         controller_stats = trial["controller_stats"]
+        bw = controller_stats["bw"]
+        del controller_stats["bw"]
+        if 8 == bw != prev_bw:
+            print_separator(len(controller_stats) + 2)
+            end_table(2)
+            start_table(3)
+            i = 0
         params = trial["params"]
         dt = int(params["PRODUCER1_DELAY"][0] - params["PRODUCER2_DELAY"][0])
         real_slow = int(dt > 0) + 1
@@ -157,8 +171,11 @@ def main(argv):
             print_separator(len(controller_stats))
         {_print(f"{value:<{column_width}}") for value in controller_stats.values()}
         _print_line()
+        i += 1
+        prev_bw = bw
+
     print_separator(len(controller_stats))
-    _table("table-2-end")
+    end_table(3)
 
     return 0
 
