@@ -55,6 +55,9 @@ def USAGE():
 
         Default: 1e-2
 
+      -b denominator bit width (bw)
+        The denominator of Fraction used in calculations are limited to 2^(bw)-1
+
     **Example**
       python src/timed_net/main.py -r 100,10,200,25 -T 2
     """
@@ -575,25 +578,19 @@ def main(argv, OUTPUT_FILE):
     p3 = net.Place("p3")
 
     p1 = net.Place("p1", initial_tokens={PRODUCER1_LABEL: [T0] * 1})
-    t11 = TimedTransition("t11", PRODUCER1_DELAY)
-    t12 = net.Transition("t12")
-    q1 = net.Place("q1")
+    t1 = TimedTransition("t1", PRODUCER1_DELAY)
     (
-        p1.connect(t11, labels=[PRODUCER1_LABEL], weight=1)
-        .connect(q1, labels=[PRODUCER1_LABEL], weight=1)
-        .connect(t12, labels=[PRODUCER1_LABEL], weight=1)
-        .connect(p3, labels=[PRODUCER1_LABEL], weight=1)
+        p1.connect(t1, labels=[PRODUCER1_LABEL], weight=1).connect(
+            p3, labels=[PRODUCER1_LABEL], weight=1
+        )
     )
 
     p2 = net.Place("p2", initial_tokens={PRODUCER2_LABEL: [T0] * 1})
-    t21 = TimedTransition("t21", PRODUCER2_DELAY)
-    t22 = net.Transition("t22")
-    q2 = net.Place("q2")
+    t2 = TimedTransition("t2", PRODUCER2_DELAY)
     (
-        p2.connect(t21, labels=[PRODUCER2_LABEL], weight=1)
-        .connect(q2, labels=[PRODUCER2_LABEL], weight=1)
-        .connect(t22, labels=[PRODUCER2_LABEL], weight=1)
-        .connect(p3, labels=[PRODUCER2_LABEL], weight=1)
+        p2.connect(t2, labels=[PRODUCER2_LABEL], weight=1).connect(
+            p3, labels=[PRODUCER2_LABEL], weight=1
+        )
     )
 
     stock_observer = net.Observer(verbose=True)
@@ -613,13 +610,9 @@ def main(argv, OUTPUT_FILE):
         reg.register(pt)
         for pt in [
             p1,
-            q1,
-            t11,
-            t12,
+            t1,
             p2,
-            q2,
-            t21,
-            t22,
+            t2,
             p3,
             q3,
             t31,

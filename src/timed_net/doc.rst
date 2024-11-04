@@ -24,8 +24,8 @@ The picture below is the auto-generated PT net diagram by `SoyutNet <https://soy
    :align: center
    :height: 640
 
-* ``p1*`` and ``t1*`` define the producer1.
-* ``p2*`` and ``t2*`` define the producer2.
+* ``p1`` and ``t1`` define the producer1.
+* ``p2`` and ``t2`` define the producer2.
 * ``t31`` is the assembler.
 * ``p3`` is the consumer.
 * The component1 and 2 are labeled by ``{1}`` and ``{2}``.
